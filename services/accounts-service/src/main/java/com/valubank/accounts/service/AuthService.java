@@ -25,6 +25,6 @@ public class AuthService {
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        return new LoginResponse(customer.getId(), customer.getUsername(), customer.getFullName());
+        return new LoginResponse(customer.getId(), customer.getUsername(), customer.getFullName(), customer.isAdmin());
     }
 }

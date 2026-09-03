@@ -124,10 +124,16 @@ By default it points at `http://localhost:8081` (Accounts) and
 |----------|---------------|-------------------|
 | alice    | password123   | Alice Janssen     |
 | bob      | password123   | Bob de Vries      |
+| admin    | admin123      | ValuBank Admin    |
 
 Login is intentionally simple (plaintext password check, no JWT/session
 tokens) — it exists to give the workshop a login screen, not to demonstrate
-production authentication.
+production authentication. The `admin` user owns no accounts of its own;
+logging in as `admin` goes straight to an admin view listing every account
+across all customers, with a checkbox per account and a button to add
+interest to the selected accounts (see below). There is no server-side
+enforcement of the admin role — like the rest of the login system, this is
+deliberately simplified for the workshop.
 
 ### Accounts (Accounts Service)
 
@@ -174,3 +180,20 @@ No seed data — the Payments DB starts empty and fills up as you use the app.
 Try a payment over 10,000, or to `NL99BLOCKED0000000`, to see a rejection;
 try stopping the Accounts Service mid-demo to see a `FAILED` payment and the
 frontend's error handling.
+
+## Adding interest to an account
+
+`PUT /api/accounts/{accountId}/interest` on the Accounts Service calculates
+interest on an account's current balance and credits it:
+
+1. Looks up the account's applicable rate from the Interest Rate /
+   Configuration Service (the same call `GET .../interest-rate` uses).
+2. Computes `interestAmount = balance * ratePercentage / 100` (rounded to 2
+   decimals).
+3. Adds it to the balance and returns the before/after figures, e.g.
+   `{"accountId":2,"accountType":"SAVINGS","previousBalance":10000.00,"ratePercentage":1.5,"interestAmount":150.00,"newBalance":10150.00,"currency":"EUR"}`.
+
+The admin frontend view (log in as `admin`) lists every account with its
+owner and balance, lets you select one or more via checkbox, and calls this
+endpoint once per selected account when you press "Add interest to
+selected".

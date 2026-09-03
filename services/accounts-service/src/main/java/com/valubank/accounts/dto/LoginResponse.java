@@ -5,14 +5,16 @@ public class LoginResponse {
     private Long customerId;
     private String username;
     private String fullName;
+    private boolean admin;
 
     public LoginResponse() {
     }
 
-    public LoginResponse(Long customerId, String username, String fullName) {
+    public LoginResponse(Long customerId, String username, String fullName, boolean admin) {
         this.customerId = customerId;
         this.username = username;
         this.fullName = fullName;
+        this.admin = admin;
     }
 
     public Long getCustomerId() {
@@ -37,5 +39,13 @@ public class LoginResponse {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
 }

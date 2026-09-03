@@ -40,3 +40,16 @@ export async function getInterestRate(accountId) {
   const response = await fetch(`${BASE_URL}/api/accounts/${accountId}/interest-rate`)
   return handleResponse(response)
 }
+
+// Admin-only in intent (not enforced server-side - this workshop's auth is deliberately simple).
+export async function getAllAccounts() {
+  const response = await fetch(`${BASE_URL}/api/accounts`)
+  return handleResponse(response)
+}
+
+export async function applyInterest(accountId) {
+  const response = await fetch(`${BASE_URL}/api/accounts/${accountId}/interest`, {
+    method: 'PUT'
+  })
+  return handleResponse(response)
+}

@@ -21,7 +21,7 @@ export default function Login() {
     try {
       const profile = await loginRequest(username, password)
       login(profile)
-      const redirectTo = location.state?.from?.pathname || '/'
+      const redirectTo = profile.admin ? '/admin' : location.state?.from?.pathname || '/'
       navigate(redirectTo, { replace: true })
     } catch (err) {
       setError(err.message || 'Unable to log in. Please try again.')
@@ -69,6 +69,8 @@ export default function Login() {
         <p className="login-hint">
           Demo users: <code>alice</code> or <code>bob</code>, password{' '}
           <code>password123</code>
+          <br />
+          Admin: <code>admin</code>, password <code>admin123</code>
         </p>
       </div>
     </div>

@@ -25,13 +25,21 @@ public class Customer {
     @Column(nullable = false)
     private String fullName;
 
+    @Column(nullable = false)
+    private boolean admin;
+
     public Customer() {
     }
 
     public Customer(String username, String password, String fullName) {
+        this(username, password, fullName, false);
+    }
+
+    public Customer(String username, String password, String fullName, boolean admin) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
+        this.admin = admin;
     }
 
     public Long getId() {
@@ -64,5 +72,13 @@ public class Customer {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
     }
 }

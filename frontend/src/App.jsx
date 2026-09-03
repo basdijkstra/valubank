@@ -5,6 +5,7 @@ import Header from './components/Header'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AccountDetail from './pages/AccountDetail'
+import AdminDashboard from './pages/AdminDashboard'
 
 export default function App() {
   return (
@@ -26,6 +27,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <AccountDetail />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth adminOnly>
+                <AdminDashboard />
               </RequireAuth>
             }
           />

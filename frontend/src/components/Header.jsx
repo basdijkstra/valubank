@@ -17,7 +17,7 @@ export default function Header() {
   return (
     <header className="app-header">
       <div className="app-header-inner">
-        <Link to="/" className="app-brand">
+        <Link to={session.admin ? '/admin' : '/'} className="app-brand">
           ValuBank
         </Link>
         <nav className="app-nav">

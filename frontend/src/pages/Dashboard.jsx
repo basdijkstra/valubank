@@ -2,14 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getAccountsForCustomer } from '../api/accounts'
-
-function formatBalance(balance, currency) {
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(balance)
-  } catch {
-    return `${balance} ${currency}`
-  }
-}
+import { formatBalance } from '../utils/format'
 
 export default function Dashboard() {
   const { session } = useAuth()

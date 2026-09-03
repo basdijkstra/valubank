@@ -2,14 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getAccount, getInterestRate } from '../api/accounts'
 import { createPayment, getPaymentsForAccount } from '../api/payments'
-
-function formatBalance(balance, currency) {
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(balance)
-  } catch {
-    return `${balance} ${currency}`
-  }
-}
+import { formatBalance } from '../utils/format'
 
 function formatTimestamp(timestamp) {
   if (!timestamp) return ''

@@ -29,6 +29,8 @@ public class DataSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         Customer alice = customerRepository.save(new Customer("alice", "password123", "Alice Janssen"));
         Customer bob = customerRepository.save(new Customer("bob", "password123", "Bob de Vries"));
+        // Admin user has no accounts of its own - it manages other customers' accounts instead.
+        customerRepository.save(new Customer("admin", "admin123", "ValuBank Admin", true));
 
         accountRepository.save(new Account(alice.getId(), "NL01VALU0000000001", "CHECKING",
                 new BigDecimal("2500.00"), "EUR"));
