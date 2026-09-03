@@ -56,7 +56,7 @@ OpenAPI spec, or a shared schema).
 
 ## Prerequisites
 
-- JDK 17+
+- JDK 21+ (services target Java 21 bytecode; any newer JDK, e.g. 21-25, runs it fine)
 - Maven 3.9+ (`mvn` on your PATH)
 - Node.js 18+ and npm
 
