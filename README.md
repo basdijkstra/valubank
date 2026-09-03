@@ -27,16 +27,16 @@ valubank/
                     accounts   │   \
                                ▼    ▼
                  ┌─────────────┐   ┌──────────────────┐
-                 │  Accounts   │◄──┤     Payments      │
-                 │  Service    │   │     Service        │
-                 │  :8081      │   │     :8082          │
-                 └──────┬──────┘   └─────────┬──────────┘
+                 │  Accounts   │◄──┤     Payments     │
+                 │  Service    │   │     Service      │
+                 │  :8081      │   │     :8082        │
+                 └──────┬──────┘   └─────────┬────────┘
                         │                    │
                         ▼                    ▼
-              ┌──────────────────┐   ┌───────────────┐
+              ┌──────────────────┐   ┌────────────────┐
               │ Interest Rate /  │   │  Fraud Service │
-              │ Config Service   │   │  :8083          │
-              │ :8084            │   └───────────────┘
+              │ Config Service   │   │  :8083         │
+              │ :8084            │   └────────────────┘
               └──────────────────┘
 ```
 
@@ -76,13 +76,13 @@ stops everything.
 
 Once running:
 
-| Component               | URL                          |
-|--------------------------|-------------------------------|
-| Frontend                 | http://localhost:5173         |
-| Accounts Service         | http://localhost:8081          |
-| Payments Service         | http://localhost:8082          |
-| Fraud Service            | http://localhost:8083          |
-| Interest Rate Service    | http://localhost:8084          |
+| Component              | URL                    |
+|------------------------|------------------------|
+| Frontend               | http://localhost:5173  |
+| Accounts Service       | http://localhost:8081  |
+| Payments Service       | http://localhost:8082  |
+| Fraud Service          | http://localhost:8083  |
+| Interest Rate Service  | http://localhost:8084  |
 
 Start order matters a little in practice (Accounts Service calls Interest
 Rate Service; Payments Service calls Accounts Service and Fraud Service) but
@@ -120,7 +120,7 @@ By default it points at `http://localhost:8081` (Accounts) and
 
 ### Customers / login (Accounts Service)
 
-| Username | Password      | Full name        |
+| Username | Password      | Full name         |
 |----------|---------------|-------------------|
 | alice    | password123   | Alice Janssen     |
 | bob      | password123   | Bob de Vries      |
@@ -131,10 +131,10 @@ production authentication.
 
 ### Accounts (Accounts Service)
 
-| Owner | IBAN                    | Type    | Balance   | Currency |
-|-------|--------------------------|---------|-----------|----------|
+| Owner | IBAN                     | Type     | Balance   | Currency |
+|-------|--------------------------|----------|-----------|----------|
 | alice | NL01VALU0000000001       | CHECKING | 2,500.00  | EUR      |
-| alice | NL01VALU0000000002       | SAVINGS | 10,000.00 | EUR      |
+| alice | NL01VALU0000000002       | SAVINGS  | 10,000.00 | EUR      |
 | bob   | NL01VALU0000000003       | CHECKING | 500.00    | EUR      |
 
 ### Interest rates (Interest Rate / Configuration Service)
