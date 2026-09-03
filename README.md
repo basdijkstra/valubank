@@ -14,7 +14,9 @@ valubank/
 │   └── interest-rate-service/    Interest-rate configuration store
 └── scripts/
     ├── start-all.ps1             Start everything (Windows / PowerShell)
-    └── start-all.sh              Start everything (bash)
+    ├── start-all.sh              Start everything (bash)
+    ├── stop-all.ps1              Stop everything (Windows / PowerShell)
+    └── stop-all.sh               Stop everything (bash)
 ```
 
 ## Architecture
@@ -88,6 +90,20 @@ Start order matters a little in practice (Accounts Service calls Interest
 Rate Service; Payments Service calls Accounts Service and Fraud Service) but
 every service tolerates its dependencies being down or starting late — it
 just returns an error until the dependency is reachable, rather than crashing.
+
+To stop everything (e.g. before rebuilding and re-running after a code
+change):
+
+```powershell
+.\scripts\stop-all.ps1
+```
+```bash
+./scripts/stop-all.sh
+```
+
+Both find whatever process is listening on each of the five ports and kill
+it — this works regardless of how the service was started (`start-all`, an
+IDE, run manually), and only ever touches those five ports.
 
 ## Running services individually
 
