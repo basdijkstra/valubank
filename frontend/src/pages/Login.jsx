@@ -37,27 +37,29 @@ export default function Login() {
         <p className="login-subtitle">Log in to manage your accounts</p>
 
         <form onSubmit={handleSubmit} className="form">
-          <label className="form-field">
-            <span>Username</span>
+          <div className="form-field">
+            <label htmlFor="login-username">Username</label>
             <input
+              id="login-username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               required
             />
-          </label>
+          </div>
 
-          <label className="form-field">
-            <span>Password</span>
+          <div className="form-field">
+            <label htmlFor="login-password">Password</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
             />
-          </label>
+          </div>
 
           {error && <div className="banner banner-error">{error}</div>}
 

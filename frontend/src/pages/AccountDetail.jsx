@@ -185,29 +185,32 @@ export default function AccountDetail() {
           {submitError && <div className="banner banner-error">{submitError}</div>}
 
           <form onSubmit={handleSubmitPayment} className="form">
-            <label className="form-field">
-              <span>Destination IBAN</span>
+            <div className="form-field">
+              <label htmlFor="payment-to-iban">Destination IBAN</label>
               <input
+                id="payment-to-iban"
                 type="text"
                 value={form.toAccountIban}
                 onChange={(e) => handleFormChange('toAccountIban', e.target.value)}
                 required
               />
-            </label>
+            </div>
 
-            <label className="form-field">
-              <span>Destination name</span>
+            <div className="form-field">
+              <label htmlFor="payment-to-name">Destination name</label>
               <input
+                id="payment-to-name"
                 type="text"
                 value={form.toAccountName}
                 onChange={(e) => handleFormChange('toAccountName', e.target.value)}
                 required
               />
-            </label>
+            </div>
 
-            <label className="form-field">
-              <span>Amount</span>
+            <div className="form-field">
+              <label htmlFor="payment-amount">Amount</label>
               <input
+                id="payment-amount"
                 type="number"
                 min="0"
                 step="0.01"
@@ -215,26 +218,28 @@ export default function AccountDetail() {
                 onChange={(e) => handleFormChange('amount', e.target.value)}
                 required
               />
-            </label>
+            </div>
 
-            <label className="form-field">
-              <span>Currency</span>
+            <div className="form-field">
+              <label htmlFor="payment-currency">Currency</label>
               <input
+                id="payment-currency"
                 type="text"
                 value={form.currency}
                 onChange={(e) => handleFormChange('currency', e.target.value)}
                 required
               />
-            </label>
+            </div>
 
-            <label className="form-field">
-              <span>Description</span>
+            <div className="form-field">
+              <label htmlFor="payment-description">Description</label>
               <input
+                id="payment-description"
                 type="text"
                 value={form.description}
                 onChange={(e) => handleFormChange('description', e.target.value)}
               />
-            </label>
+            </div>
 
             <button type="submit" className="btn btn-primary" disabled={submitting || !account}>
               {submitting ? 'Submitting...' : 'Send payment'}
