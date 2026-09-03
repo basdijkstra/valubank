@@ -27,7 +27,7 @@ public class InterestRateSeeder implements ApplicationRunner {
             return;
         }
 
-        repository.save(new InterestRateConfig("CURRENT", BigDecimal.valueOf(0.1)));
+        repository.save(new InterestRateConfig("CHECKING", BigDecimal.valueOf(0.1)));
         repository.save(new InterestRateConfig("SAVINGS", BigDecimal.valueOf(1.5)));
     }
 }

@@ -30,11 +30,11 @@ public class DataSeeder implements ApplicationRunner {
         Customer alice = customerRepository.save(new Customer("alice", "password123", "Alice Janssen"));
         Customer bob = customerRepository.save(new Customer("bob", "password123", "Bob de Vries"));
 
-        accountRepository.save(new Account(alice.getId(), "NL01VALU0000000001", "CURRENT",
+        accountRepository.save(new Account(alice.getId(), "NL01VALU0000000001", "CHECKING",
                 new BigDecimal("2500.00"), "EUR"));
         accountRepository.save(new Account(alice.getId(), "NL01VALU0000000002", "SAVINGS",
                 new BigDecimal("10000.00"), "EUR"));
-        accountRepository.save(new Account(bob.getId(), "NL01VALU0000000003", "CURRENT",
+        accountRepository.save(new Account(bob.getId(), "NL01VALU0000000003", "CHECKING",
                 new BigDecimal("500.00"), "EUR"));
     }
 }

@@ -2,7 +2,7 @@ package com.valubank.accounts.dto;
 
 /**
  * Maps the raw JSON response returned by the separate Interest Rate / Configuration Service:
- * GET http://.../api/interest-rates/{accountType} -> {"accountType":"CURRENT","ratePercentage":0.1}
+ * GET http://.../api/interest-rates/{accountType} -> {"accountType":"CHECKING","ratePercentage":0.1}
  */
 public class InterestRateServiceRate {
 

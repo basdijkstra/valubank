@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 /**
  * A single interest rate configuration entry for a given account type,
- * e.g. accountType="CURRENT", ratePercentage=0.1
+ * e.g. accountType="CHECKING", ratePercentage=0.1
  */
 @Entity
 @Table(name = "interest_rate_config", uniqueConstraints = {

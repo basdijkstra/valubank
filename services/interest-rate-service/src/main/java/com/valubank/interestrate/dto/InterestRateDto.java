@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 /**
  * Response shape returned by the interest-rate endpoints, e.g.
- * {"accountType":"CURRENT","ratePercentage":0.1}
+ * {"accountType":"CHECKING","ratePercentage":0.1}
  */
 public class InterestRateDto {
 

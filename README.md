@@ -133,15 +133,15 @@ production authentication.
 
 | Owner | IBAN                    | Type    | Balance   | Currency |
 |-------|--------------------------|---------|-----------|----------|
-| alice | NL01VALU0000000001       | CURRENT | 2,500.00  | EUR      |
+| alice | NL01VALU0000000001       | CHECKING | 2,500.00  | EUR      |
 | alice | NL01VALU0000000002       | SAVINGS | 10,000.00 | EUR      |
-| bob   | NL01VALU0000000003       | CURRENT | 500.00    | EUR      |
+| bob   | NL01VALU0000000003       | CHECKING | 500.00    | EUR      |
 
 ### Interest rates (Interest Rate / Configuration Service)
 
 | Account type | Rate  |
 |--------------|-------|
-| CURRENT      | 0.1%  |
+| CHECKING     | 0.1%  |
 | SAVINGS      | 1.5%  |
 
 Rates can be changed at runtime via `PUT /api/interest-rates/{accountType}`

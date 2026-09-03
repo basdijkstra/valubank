@@ -24,7 +24,7 @@ public class Account {
     @Column(nullable = false)
     private String iban;
 
-    // "CURRENT" or "SAVINGS"
+    // "CHECKING" or "SAVINGS"
     @Column(nullable = false)
     private String accountType;
 

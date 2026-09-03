@@ -1,7 +1,7 @@
 package com.valubank.interestrate.dto;
 
 /**
- * Simple error body, e.g. {"error":"No interest rate configured for account type: CURRENT"}
+ * Simple error body, e.g. {"error":"No interest rate configured for account type: CHECKING"}
  */
 public class ErrorResponse {
 
