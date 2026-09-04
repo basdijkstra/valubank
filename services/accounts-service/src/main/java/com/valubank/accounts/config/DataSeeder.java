@@ -35,7 +35,7 @@ public class DataSeeder implements ApplicationRunner {
         accountRepository.save(new Account(alice.getId(), "NL01VALU0000000001", "CHECKING",
                 new BigDecimal("2500.00"), "EUR"));
         accountRepository.save(new Account(alice.getId(), "NL01VALU0000000002", "SAVINGS",
-                new BigDecimal("10000.00"), "EUR"));
+                new BigDecimal("11000.00"), "EUR"));
         accountRepository.save(new Account(bob.getId(), "NL01VALU0000000003", "CHECKING",
                 new BigDecimal("500.00"), "EUR"));
     }

@@ -156,7 +156,7 @@ deliberately simplified for the workshop.
 | Owner | IBAN                     | Type     | Balance   | Currency |
 |-------|--------------------------|----------|-----------|----------|
 | alice | NL01VALU0000000001       | CHECKING | 2,500.00  | EUR      |
-| alice | NL01VALU0000000002       | SAVINGS  | 10,000.00 | EUR      |
+| alice | NL01VALU0000000002       | SAVINGS  | 11,000.00 | EUR      |
 | bob   | NL01VALU0000000003       | CHECKING | 500.00    | EUR      |
 
 ### Interest rates (Interest Rate / Configuration Service)
@@ -207,7 +207,7 @@ interest on an account's current balance and credits it:
 2. Computes `interestAmount = balance * ratePercentage / 100` (rounded to 2
    decimals).
 3. Adds it to the balance and returns the before/after figures, e.g.
-   `{"accountId":2,"accountType":"SAVINGS","previousBalance":10000.00,"ratePercentage":1.5,"interestAmount":150.00,"newBalance":10150.00,"currency":"EUR"}`.
+   `{"accountId":2,"accountType":"SAVINGS","previousBalance":11000.00,"ratePercentage":1.5,"interestAmount":165.00,"newBalance":11165.00,"currency":"EUR"}`.
 
 The admin frontend view (log in as `admin`) lists every account with its
 owner and balance, lets you select one or more via checkbox, and calls this
