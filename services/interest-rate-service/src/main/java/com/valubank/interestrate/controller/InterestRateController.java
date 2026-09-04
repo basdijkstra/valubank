@@ -15,7 +15,8 @@ import java.util.List;
 
 /**
  * Interest rate configuration API, consumed server-to-server by the
- * ValuBank Accounts Service.
+ * ValuBank Accounts Service. Each account type has an ordered schedule of
+ * balance tiers, each with its own rate.
  */
 @RestController
 @RequestMapping("/api/interest-rates")
@@ -40,7 +41,7 @@ public class InterestRateController {
     @PutMapping("/{accountType}")
     public ResponseEntity<InterestRateDto> upsertRate(@PathVariable String accountType,
                                                         @RequestBody UpdateRateRequest request) {
-        InterestRateDto updated = interestRateService.upsertRate(accountType, request.getRatePercentage());
+        InterestRateDto updated = interestRateService.upsertRates(accountType, request.getTiers());
         return ResponseEntity.ok(updated);
     }
 }

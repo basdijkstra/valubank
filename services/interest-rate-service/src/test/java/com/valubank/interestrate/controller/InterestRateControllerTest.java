@@ -24,16 +24,17 @@ class InterestRateControllerTest {
 
     @ParameterizedTest
     @CsvSource({
-            "SAVINGS, 1.5",
-            "CHECKING, 0.1"
+            "SAVINGS, 2, 1.5",
+            "CHECKING, 1, 0.1"
     })
-    void getRateForAccountType(String accountType, float expectedRatePercentage) {
+    void getRateForAccountType(String accountType, int expectedTierCount, float expectedFirstTierRate) {
         RestAssured
                 .when()
                     .get("/api/interest-rates/{accountType}", accountType)
                 .then()
                     .statusCode(200)
                     .body("accountType", equalTo(accountType))
-                    .body("ratePercentage", equalTo(expectedRatePercentage));
+                    .body("tiers.size()", equalTo(expectedTierCount))
+                    .body("tiers[0].ratePercentage", equalTo(expectedFirstTierRate));
     }
 }

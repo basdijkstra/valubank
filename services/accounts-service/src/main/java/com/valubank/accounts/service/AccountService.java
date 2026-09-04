@@ -59,8 +59,13 @@ public class AccountService {
 
     public InterestRateResponse getInterestRate(Long accountId) {
         Account account = findAccountOrThrow(accountId);
+        BigDecimal balance = account.getBalance();
+
         InterestRateServiceRate rate = interestRateClient.getRateForAccountType(account.getAccountType());
-        return new InterestRateResponse(account.getId(), account.getAccountType(), rate.getRatePercentage());
+        BigDecimal interestAmount = interestAmountForTiers(rate.getTiers(), balance);
+        BigDecimal ratePercentage = effectiveRatePercentage(balance, interestAmount);
+
+        return new InterestRateResponse(account.getId(), account.getAccountType(), ratePercentage.doubleValue());
     }
 
     public AccountDto applyBalanceMutation(Long accountId, BalanceMutationRequest request) {
@@ -82,24 +87,57 @@ public class AccountService {
         return AccountDto.from(account);
     }
 
-    // Calculates interest on the current balance using the applicable rate from the
-    // Interest Rate / Configuration Service, and credits it to the account.
+    // Calculates interest on the current balance, using the account type's tier schedule
+    // from the Interest Rate / Configuration Service, and credits it to the account.
     public InterestApplicationResponse applyInterest(Long accountId) {
         Account account = findAccountOrThrow(accountId);
-        InterestRateServiceRate rate = interestRateClient.getRateForAccountType(account.getAccountType());
-
-        BigDecimal ratePercentage = BigDecimal.valueOf(rate.getRatePercentage());
         BigDecimal previousBalance = account.getBalance();
-        BigDecimal interestAmount = previousBalance
-                .multiply(ratePercentage)
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        BigDecimal newBalance = previousBalance.add(interestAmount);
 
+        InterestRateServiceRate rate = interestRateClient.getRateForAccountType(account.getAccountType());
+        BigDecimal interestAmount = interestAmountForTiers(rate.getTiers(), previousBalance);
+
+        BigDecimal newBalance = previousBalance.add(interestAmount);
         account.setBalance(newBalance);
         accountRepository.save(account);
 
+        // Effective blended rate, derived from the interest actually applied, so the
+        // response stays meaningful even when the balance spans multiple tiers.
+        BigDecimal ratePercentage = effectiveRatePercentage(previousBalance, interestAmount);
+
         return new InterestApplicationResponse(account.getId(), account.getAccountType(), previousBalance,
                 ratePercentage, interestAmount, newBalance, account.getCurrency());
+    }
+
+    // Applies each tier's rate only to the portion of the balance that falls within it -
+    // e.g. tiers [{upTo:10000, rate:1.5}, {upTo:null, rate:1.0}] on a balance of 12000
+    // earns 1.5% on 10000 and 1.0% on the remaining 2000. Works for any number of tiers,
+    // so it needs no per-account-type branching.
+    private BigDecimal interestAmountForTiers(List<InterestRateServiceRate.Tier> tiers, BigDecimal balance) {
+        BigDecimal previousThreshold = BigDecimal.ZERO;
+        BigDecimal totalInterest = BigDecimal.ZERO;
+
+        for (InterestRateServiceRate.Tier tier : tiers) {
+            BigDecimal tierCap = tier.getUpToAmount() == null ? balance : tier.getUpToAmount();
+            BigDecimal tierBalance = balance.min(tierCap).subtract(previousThreshold).max(BigDecimal.ZERO);
+
+            totalInterest = totalInterest.add(tierBalance
+                    .multiply(tier.getRatePercentage())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+
+            previousThreshold = tierCap;
+            if (balance.compareTo(previousThreshold) <= 0) {
+                break;
+            }
+        }
+
+        return totalInterest;
+    }
+
+    private BigDecimal effectiveRatePercentage(BigDecimal balance, BigDecimal interestAmount) {
+        return balance.compareTo(BigDecimal.ZERO) == 0
+                ? BigDecimal.ZERO
+                : interestAmount.multiply(BigDecimal.valueOf(100))
+                        .divide(balance, 4, RoundingMode.HALF_UP);
     }
 
     private Account findAccountOrThrow(Long accountId) {

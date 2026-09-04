@@ -161,14 +161,26 @@ deliberately simplified for the workshop.
 
 ### Interest rates (Interest Rate / Configuration Service)
 
-| Account type | Rate  |
-|--------------|-------|
-| CHECKING     | 0.1%  |
-| SAVINGS      | 1.5%  |
+Each account type has an ordered schedule of balance tiers, each with its own
+rate. A tier's `upToAmount` is the portion of the balance it covers; the last
+tier per account type has `upToAmount: null` (unbounded), covering everything
+above the previous tier's threshold.
 
-Rates can be changed at runtime via `PUT /api/interest-rates/{accountType}`
-on the Interest Rate Service — Accounts Service picks up the new value on its
-next lookup, with no restart needed.
+| Account type | Tier            | Rate  |
+|--------------|-----------------|-------|
+| CHECKING     | 0 – ∞           | 0.1%  |
+| SAVINGS      | 0 – 10,000      | 1.5%  |
+| SAVINGS      | above 10,000    | 1.0%  |
+
+Interest is calculated per tier and summed — e.g. a SAVINGS balance of
+12,000.00 earns 1.5% on 10,000.00 (150.00) plus 1.0% on the remaining
+2,000.00 (20.00) = 170.00 total.
+
+The full schedule for an account type can be replaced at runtime via
+`PUT /api/interest-rates/{accountType}` on the Interest Rate Service, e.g.
+`{"tiers":[{"upToAmount":10000.00,"ratePercentage":1.5},{"ratePercentage":1.0}]}`
+— Accounts Service picks up the new schedule on its next lookup, with no
+restart needed.
 
 ### Fraud rules (Fraud Service — hardcoded, no DB)
 
@@ -202,12 +214,16 @@ frontend's error handling.
 `PUT /api/accounts/{accountId}/interest` on the Accounts Service calculates
 interest on an account's current balance and credits it:
 
-1. Looks up the account's applicable rate from the Interest Rate /
+1. Looks up the account type's tier schedule from the Interest Rate /
    Configuration Service (the same call `GET .../interest-rate` uses).
-2. Computes `interestAmount = balance * ratePercentage / 100` (rounded to 2
-   decimals).
-3. Adds it to the balance and returns the before/after figures, e.g.
-   `{"accountId":2,"accountType":"SAVINGS","previousBalance":11000.00,"ratePercentage":1.5,"interestAmount":165.00,"newBalance":11165.00,"currency":"EUR"}`.
+2. Applies each tier's rate only to the portion of the balance within that
+   tier, computing `tierInterest = tierBalance * tierRate / 100` (rounded to
+   2 decimals) per tier, and sums them.
+3. Adds the total to the balance and returns the before/after figures, with
+   `ratePercentage` reporting the effective blended rate actually applied
+   (`interestAmount / previousBalance * 100`), e.g. for a SAVINGS balance of
+   12,000.00:
+   `{"accountId":2,"accountType":"SAVINGS","previousBalance":12000.00,"ratePercentage":1.4167,"interestAmount":170.00,"newBalance":12170.00,"currency":"EUR"}`.
 
 The admin frontend view (log in as `admin`) lists every account with its
 owner and balance, lets you select one or more via checkbox, and calls this

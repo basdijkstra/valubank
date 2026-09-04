@@ -1,22 +1,24 @@
 package com.valubank.interestrate.dto;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 /**
- * Response shape returned by the interest-rate endpoints, e.g.
- * {"accountType":"CHECKING","ratePercentage":0.1}
+ * Response shape returned by the interest-rate endpoints: the ordered tier
+ * schedule for one account type, e.g.
+ * {"accountType":"SAVINGS","tiers":[{"upToAmount":10000.00,"ratePercentage":1.5},
+ *  {"upToAmount":null,"ratePercentage":1.0}]}
  */
 public class InterestRateDto {
 
     private String accountType;
-    private BigDecimal ratePercentage;
+    private List<InterestRateTierDto> tiers;
 
     public InterestRateDto() {
     }
 
-    public InterestRateDto(String accountType, BigDecimal ratePercentage) {
+    public InterestRateDto(String accountType, List<InterestRateTierDto> tiers) {
         this.accountType = accountType;
-        this.ratePercentage = ratePercentage;
+        this.tiers = tiers;
     }
 
     public String getAccountType() {
@@ -27,11 +29,11 @@ public class InterestRateDto {
         this.accountType = accountType;
     }
 
-    public BigDecimal getRatePercentage() {
-        return ratePercentage;
+    public List<InterestRateTierDto> getTiers() {
+        return tiers;
     }
 
-    public void setRatePercentage(BigDecimal ratePercentage) {
-        this.ratePercentage = ratePercentage;
+    public void setTiers(List<InterestRateTierDto> tiers) {
+        this.tiers = tiers;
     }
 }

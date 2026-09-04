@@ -1,27 +1,28 @@
 package com.valubank.interestrate.dto;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 /**
- * Request body for PUT /api/interest-rates/{accountType}, e.g.
- * {"ratePercentage": 0.2}
+ * Request body for PUT /api/interest-rates/{accountType}: replaces the full
+ * tier schedule for that account type, e.g.
+ * {"tiers":[{"upToAmount":10000.00,"ratePercentage":1.5},{"ratePercentage":1.0}]}
  */
 public class UpdateRateRequest {
 
-    private BigDecimal ratePercentage;
+    private List<InterestRateTierDto> tiers;
 
     public UpdateRateRequest() {
     }
 
-    public UpdateRateRequest(BigDecimal ratePercentage) {
-        this.ratePercentage = ratePercentage;
+    public UpdateRateRequest(List<InterestRateTierDto> tiers) {
+        this.tiers = tiers;
     }
 
-    public BigDecimal getRatePercentage() {
-        return ratePercentage;
+    public List<InterestRateTierDto> getTiers() {
+        return tiers;
     }
 
-    public void setRatePercentage(BigDecimal ratePercentage) {
-        this.ratePercentage = ratePercentage;
+    public void setTiers(List<InterestRateTierDto> tiers) {
+        this.tiers = tiers;
     }
 }
