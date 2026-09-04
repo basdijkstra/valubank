@@ -4,31 +4,39 @@ import { LoginPage } from './pages/loginPage';
 import { AccountsOverviewPage } from './pages/accountsOverviewPage';
 import { AdminPage } from './pages/adminPage';
 
-test('Interest is properly adding to savings account for Alice', async ({ page }) => {
+const testdata = [
+  { username: 'alice', password: 'password123', iban: 'NL01VALU0000000001', type: 'checking', interestRate: 0.001 },
+  { username: 'alice', password: 'password123', iban: 'NL01VALU0000000002', type: 'savings', interestRate: 0.015 },
+  { username: 'bob', password: 'password123', iban: 'NL01VALU0000000003', type: 'checking', interestRate: 0.001 }
+]
 
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAs('alice', 'password123');
+for (const { username, password, iban, type, interestRate } of testdata) {
+  test(`Interest is properly adding ${interestRate} interest to ${username}'s ${type} account`, async ({ page }) => {
 
-  const accountsOverviewPage = new AccountsOverviewPage(page);
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAs(username, password);
 
-  const initialBalance = await accountsOverviewPage.getAccountBalance('NL01VALU0000000002');
+    const accountsOverviewPage = new AccountsOverviewPage(page);
 
-  console.log(`Initial balance for Alice's savings account: ${initialBalance}`);
+    const initialBalance = await accountsOverviewPage.getAccountBalance(iban);
 
-  await accountsOverviewPage.logout();
+    console.log(`Initial balance for ${username}'s ${type} account: ${initialBalance}`);
 
-  await loginPage.loginAs('admin', 'admin123');
+    await accountsOverviewPage.logout();
 
-  const adminPage = new AdminPage(page);
-  await adminPage.addInterestToAccount('NL01VALU0000000002');
-  await adminPage.logout();
+    await loginPage.loginAs('admin', 'admin123');
 
-  await loginPage.loginAs('alice', 'password123');
-  
-  const updatedBalance = await accountsOverviewPage.getAccountBalance('NL01VALU0000000002');
+    const adminPage = new AdminPage(page);
+    await adminPage.addInterestToAccount(iban);
+    await adminPage.logout();
 
-  console.log(`Updated balance for Alice's savings account: ${updatedBalance}`);
+    await loginPage.loginAs(username, password);
+    
+    const updatedBalance = await accountsOverviewPage.getAccountBalance(iban);
 
-  expect(currency(updatedBalance)).toEqual(currency(initialBalance).multiply(1.015));
-});
+    console.log(`Updated balance for ${username}'s ${type} account: ${updatedBalance}`);
+
+    expect(currency(updatedBalance)).toEqual(currency(initialBalance).multiply(1 + interestRate));
+  });
+}
