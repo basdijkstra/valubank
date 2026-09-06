@@ -26,6 +26,9 @@ public class AccountService {
     private final CustomerRepository customerRepository;
     private final InterestRateClient interestRateClient;
 
+    // Hardwired, not injected - deliberate for now (see workshop step 3).
+    private final TieredInterestCalculator interestCalculator = new TieredInterestCalculator();
+
     public AccountService(AccountRepository accountRepository, CustomerRepository customerRepository,
                            InterestRateClient interestRateClient) {
         this.accountRepository = accountRepository;
@@ -62,7 +65,7 @@ public class AccountService {
         BigDecimal balance = account.getBalance();
 
         InterestRateServiceRate rate = interestRateClient.getRateForAccountType(account.getAccountType());
-        BigDecimal interestAmount = interestAmountForTiers(rate.getTiers(), balance);
+        BigDecimal interestAmount = interestCalculator.calculateInterest(rate.getTiers(), balance);
         BigDecimal ratePercentage = effectiveRatePercentage(balance, interestAmount);
 
         return new InterestRateResponse(account.getId(), account.getAccountType(), ratePercentage.doubleValue());
@@ -94,7 +97,7 @@ public class AccountService {
         BigDecimal previousBalance = account.getBalance();
 
         InterestRateServiceRate rate = interestRateClient.getRateForAccountType(account.getAccountType());
-        BigDecimal interestAmount = interestAmountForTiers(rate.getTiers(), previousBalance);
+        BigDecimal interestAmount = interestCalculator.calculateInterest(rate.getTiers(), previousBalance);
 
         BigDecimal newBalance = previousBalance.add(interestAmount);
         account.setBalance(newBalance);
@@ -106,31 +109,6 @@ public class AccountService {
 
         return new InterestApplicationResponse(account.getId(), account.getAccountType(), previousBalance,
                 ratePercentage, interestAmount, newBalance, account.getCurrency());
-    }
-
-    // Applies each tier's rate only to the portion of the balance that falls within it -
-    // e.g. tiers [{upTo:10000, rate:1.5}, {upTo:null, rate:1.0}] on a balance of 12000
-    // earns 1.5% on 10000 and 1.0% on the remaining 2000. Works for any number of tiers,
-    // so it needs no per-account-type branching.
-    private BigDecimal interestAmountForTiers(List<InterestRateServiceRate.Tier> tiers, BigDecimal balance) {
-        BigDecimal previousThreshold = BigDecimal.ZERO;
-        BigDecimal totalInterest = BigDecimal.ZERO;
-
-        for (InterestRateServiceRate.Tier tier : tiers) {
-            BigDecimal tierCap = tier.getUpToAmount() == null ? balance : tier.getUpToAmount();
-            BigDecimal tierBalance = balance.min(tierCap).subtract(previousThreshold).max(BigDecimal.ZERO);
-
-            totalInterest = totalInterest.add(tierBalance
-                    .multiply(tier.getRatePercentage())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-
-            previousThreshold = tierCap;
-            if (balance.compareTo(previousThreshold) <= 0) {
-                break;
-            }
-        }
-
-        return totalInterest;
     }
 
     private BigDecimal effectiveRatePercentage(BigDecimal balance, BigDecimal interestAmount) {
