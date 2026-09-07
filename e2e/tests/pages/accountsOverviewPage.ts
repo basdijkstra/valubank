@@ -14,6 +14,10 @@ export class AccountsOverviewPage {
         return await balanceLocator.innerText();
     }
 
+    async gotoAccountDetails(iban: string) {
+        await this.page.locator(`xpath=//div[@class='account-card-iban' and text()='${iban}']`).click();
+    }
+
     async logout() {
         await this.page.getByRole('button', { name: 'Log out' }).click();
     }
