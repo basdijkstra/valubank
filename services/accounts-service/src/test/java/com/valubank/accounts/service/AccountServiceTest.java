@@ -66,8 +66,7 @@ class AccountServiceTest {
          * 
          * Then, set the account ID to 2L.
          */
-        Account account = new Account(1L, "NL01VALU0000000002", "SAVINGS", new BigDecimal("12000.00"), "EUR");
-        account.setId(2L);
+        Account account = null;
 
         when(accountRepository.findById(2L)).thenReturn(java.util.Optional.of(account));
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -77,15 +76,14 @@ class AccountServiceTest {
          * to return an InterestRateServiceRate with accountType "SAVINGS" and the tiers
          * defined in the setupInterestRateTiers() @BeforeEach method.
          */
-        when(interestRateClient.getRateForAccountType("SAVINGS"))
-                .thenReturn(new InterestRateServiceRate("SAVINGS", tiers));
+        
 
         // Act
 
         /**
          * TODO: Call the applyInterest method of the accountService with accountId 2L
          */
-        InterestApplicationResponse response = accountService.applyInterest(2L);
+        InterestApplicationResponse response = null;
 
         // Assert
 
@@ -97,10 +95,6 @@ class AccountServiceTest {
          * 
          * Also check that the account's balance has indeed been updated to 12170.00.
          */
-        assertThat(response.getPreviousBalance()).isEqualTo(new BigDecimal("12000.00"));
-        assertThat(response.getInterestAmount()).isEqualTo(new BigDecimal("170.00"));
-        assertThat(response.getNewBalance()).isEqualTo(new BigDecimal("12170.00"));
-        
-        assertThat(account.getBalance()).isEqualTo(new BigDecimal("12170.00"));        
+    
     }
 }
