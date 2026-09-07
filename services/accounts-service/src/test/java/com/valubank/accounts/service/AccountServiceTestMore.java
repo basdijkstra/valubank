@@ -35,6 +35,9 @@ class AccountServiceTestMore {
     @Mock
     private InterestRateClient interestRateClient;
 
+    @Mock
+    private TieredInterestCalculator tieredInterestCalculator;
+
     // Class under test - real instance, wired with the mocks above.
     @InjectMocks
     private AccountService accountService;
@@ -43,7 +46,7 @@ class AccountServiceTestMore {
     private List<InterestRateServiceRate.Tier> threeTiers;
     private List<InterestRateServiceRate.Tier> emptyTiers;
 
-    @BeforeEach 
+    @BeforeEach
     public void setupInterestRateTiers() {
 
         this.twoTiers = List.of(
@@ -62,7 +65,7 @@ class AccountServiceTestMore {
 
     @Test
     void applyInterest_usingTwoTiers_appliesEachTierRateToItsPortionOfTheBalance() {
-        
+
         // Arrange
         Account account = new Account(1L, "NL01VALU0000000002", "SAVINGS", new BigDecimal("12000.00"), "EUR");
         account.setId(2L);
@@ -72,6 +75,10 @@ class AccountServiceTestMore {
         when(interestRateClient.getRateForAccountType("SAVINGS"))
                 .thenReturn(new InterestRateServiceRate("SAVINGS", twoTiers));
 
+        // Added
+        when(tieredInterestCalculator.calculateInterest(twoTiers, new BigDecimal("12000.00")))
+                .thenReturn(new BigDecimal("170.00"));
+
         // Act
         InterestApplicationResponse response = accountService.applyInterest(2L);
 
@@ -79,12 +86,12 @@ class AccountServiceTestMore {
         assertThat(response.getPreviousBalance()).isEqualTo(new BigDecimal("12000.00"));
         assertThat(response.getInterestAmount()).isEqualTo(new BigDecimal("170.00"));
         assertThat(response.getNewBalance()).isEqualTo(new BigDecimal("12170.00"));
-        assertThat(account.getBalance()).isEqualTo(new BigDecimal("12170.00"));        
+        assertThat(account.getBalance()).isEqualTo(new BigDecimal("12170.00"));
     }
 
     @Test
     void applyInterest_usingThreeTiers_appliesEachTierRateToItsPortionOfTheBalance() {
-        
+
         // Arrange
         Account account = new Account(1L, "NL01VALU0000000002", "SAVINGS", new BigDecimal("35000.00"), "EUR");
         account.setId(2L);
@@ -94,6 +101,10 @@ class AccountServiceTestMore {
         when(interestRateClient.getRateForAccountType("SAVINGS"))
                 .thenReturn(new InterestRateServiceRate("SAVINGS", threeTiers));
 
+        // Added
+        when(tieredInterestCalculator.calculateInterest(threeTiers, new BigDecimal("35000.00")))
+                .thenReturn(new BigDecimal("325.00"));
+
         // Act
         InterestApplicationResponse response = accountService.applyInterest(2L);
 
@@ -101,12 +112,12 @@ class AccountServiceTestMore {
         assertThat(response.getPreviousBalance()).isEqualTo(new BigDecimal("35000.00"));
         assertThat(response.getInterestAmount()).isEqualTo(new BigDecimal("325.00"));
         assertThat(response.getNewBalance()).isEqualTo(new BigDecimal("35325.00"));
-        assertThat(account.getBalance()).isEqualTo(new BigDecimal("35325.00"));        
+        assertThat(account.getBalance()).isEqualTo(new BigDecimal("35325.00"));
     }
 
     @Test
     void applyInterest_usingEmptyTiers_appliesNoInterest() {
-        
+
         // Arrange
         Account account = new Account(1L, "NL01VALU0000000002", "SAVINGS", new BigDecimal("12000.00"), "EUR");
         account.setId(2L);
@@ -115,6 +126,10 @@ class AccountServiceTestMore {
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(interestRateClient.getRateForAccountType("SAVINGS"))
                 .thenReturn(new InterestRateServiceRate("SAVINGS", emptyTiers));
+
+        // Added
+        when(tieredInterestCalculator.calculateInterest(emptyTiers, new BigDecimal("12000.00")))
+                .thenReturn(BigDecimal.ZERO);
 
         // Act
         InterestApplicationResponse response = accountService.applyInterest(2L);

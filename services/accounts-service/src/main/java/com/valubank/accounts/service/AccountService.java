@@ -25,14 +25,14 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final InterestRateClient interestRateClient;
-
-    private final TieredInterestCalculator interestCalculator = new TieredInterestCalculator();
+    private final TieredInterestCalculator interestCalculator;
 
     public AccountService(AccountRepository accountRepository, CustomerRepository customerRepository,
-                           InterestRateClient interestRateClient) {
+                           InterestRateClient interestRateClient, TieredInterestCalculator interestCalculator) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
         this.interestRateClient = interestRateClient;
+        this.interestCalculator = interestCalculator;
     }
 
     public List<AccountDto> getAccountsForCustomer(Long customerId) {
