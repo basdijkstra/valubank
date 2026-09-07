@@ -6,12 +6,15 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 /**
  * Applies each tier's rate only to the portion of the balance that falls within it -
  * e.g. tiers [{upTo:10000, rate:1.5}, {upTo:null, rate:1.0}] on a balance of 12000
  * earns 1.5% on 10000 and 1.0% on the remaining 2000. Works for any number of tiers,
  * so it needs no per-account-type branching.
  */
+@Component
 public class TieredInterestCalculator {
 
     public BigDecimal calculateInterest(List<InterestRateServiceRate.Tier> tiers, BigDecimal balance) {
