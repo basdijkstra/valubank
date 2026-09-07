@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AccountServiceTest {
+class AccountServiceTestAnswers {
 
     // Cross process/IO boundaries - mocked so the test is fast and deterministic,
     // with no real HTTP call or database involved.
@@ -77,15 +77,14 @@ class AccountServiceTest {
          * to return an InterestRateServiceRate with accountType "SAVINGS" and the tiers
          * defined in the setupInterestRateTiers() @BeforeEach method.
          */
-        when(interestRateClient.getRateForAccountType("SAVINGS"))
-                .thenReturn(new InterestRateServiceRate("SAVINGS", tiers));
+
 
         // Act
 
         /**
          * TODO: Call the applyInterest method of the accountService with accountId 2L
          */
-        InterestApplicationResponse response = accountService.applyInterest(2L);
+        InterestApplicationResponse response = null;
 
         // Assert
 
@@ -97,10 +96,7 @@ class AccountServiceTest {
          * 
          * Also check that the account's balance has indeed been updated to 12170.00.
          */
-        assertThat(response.getPreviousBalance()).isEqualTo(new BigDecimal("12000.00"));
-        assertThat(response.getInterestAmount()).isEqualTo(new BigDecimal("170.00"));
-        assertThat(response.getNewBalance()).isEqualTo(new BigDecimal("12170.00"));
+
         
-        assertThat(account.getBalance()).isEqualTo(new BigDecimal("12170.00"));        
     }
 }
