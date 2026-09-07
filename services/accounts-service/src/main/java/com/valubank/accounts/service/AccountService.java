@@ -26,7 +26,6 @@ public class AccountService {
     private final CustomerRepository customerRepository;
     private final InterestRateClient interestRateClient;
 
-    // Hardwired, not injected - deliberate for now (see workshop step 3).
     private final TieredInterestCalculator interestCalculator = new TieredInterestCalculator();
 
     public AccountService(AccountRepository accountRepository, CustomerRepository customerRepository,
