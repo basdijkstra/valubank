@@ -2,7 +2,6 @@ package com.valubank.payments.service;
 
 import com.valubank.payments.client.AccountsServiceClient;
 import com.valubank.payments.client.FraudServiceClient;
-import com.valubank.payments.dto.AccountDto;
 import com.valubank.payments.dto.FraudCheckResponse;
 import com.valubank.payments.dto.PaymentRequest;
 import com.valubank.payments.entity.Payment;
@@ -19,10 +18,9 @@ import java.util.List;
 /**
  * Orchestrates the payment flow described in the workshop spec:
  *  1. verify the source account with the Accounts Service
- *  2. reject up-front on insufficient funds (no fraud check needed)
- *  3. run a fraud check
- *  4. debit the source account
- *  5. record the outcome as a Payment, whatever it was
+ *  2. run a fraud check
+ *  3. debit the source account (insufficient funds is rejected here, by the Accounts Service)
+ *  4. record the outcome as a Payment, whatever it was
  */
 @Service
 public class PaymentService {
@@ -49,9 +47,8 @@ public class PaymentService {
      *                                             controller must respond 502.
      */
     public Payment createPayment(PaymentRequest request) {
-        AccountDto sourceAccount;
         try {
-            sourceAccount = accountsServiceClient.getAccount(request.getFromAccountId());
+            accountsServiceClient.getAccount(request.getFromAccountId());
         } catch (AccountNotFoundException | DependencyUnavailableException e) {
             throw new SourceAccountUnverifiableException("Could not verify source account");
         }
@@ -64,13 +61,6 @@ public class PaymentService {
         payment.setCurrency(request.getCurrency());
         payment.setDescription(request.getDescription());
         payment.setTimestamp(Instant.now());
-
-        // b. Reject up-front on insufficient funds - no fraud check in this case.
-        if (sourceAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            payment.setStatus(STATUS_REJECTED);
-            payment.setReason("Insufficient funds");
-            return paymentRepository.save(payment);
-        }
 
         // c. Run the fraud check.
         FraudCheckResponse fraudCheck;
