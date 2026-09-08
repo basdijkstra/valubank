@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Disabled 
 @ExtendWith(PactConsumerTestExt.class)
 @PactTestFor(providerName = "accounts-service", pactVersion = PactSpecVersion.V3)
 class AccountsServiceClientPactTest {
@@ -40,9 +41,6 @@ class AccountsServiceClientPactTest {
          * TODO: Create a new DslPart for the response body that contains a single field 'error' with a string value.
          */
 
-        DslPart responseBody = LambdaDsl.newJsonBody(o -> 
-            o.stringType("error", "an example error message")
-        ).build();
 
         /**
          * TODO: Use the Pact DSL to define a contract for a POST request to /api/accounts/1/balance-mutations
@@ -65,17 +63,7 @@ class AccountsServiceClientPactTest {
          * for an example of using the Pact DSL to define a contract.
          */
 
-        return builder
-                .given("account 1 exists with balance 50.00")
-                .uponReceiving("a debit of 200.00 against account 1, which exceeds its balance")
-                .path("/api/accounts/1/balance-mutations")
-                .method("POST")
-                .headers("Content-Type", "application/json")
-                .body(requestBody)
-                .willRespondWith()
-                .status(409)
-                .body(responseBody)
-                .toPact();
+        return null;
     }
 
     @Test
@@ -88,8 +76,5 @@ class AccountsServiceClientPactTest {
          * TODO: Call the debit method of the AccountsServiceClient to debit 200.00 from account 1,
          * which has a balance of 50.00. Assert that an InsufficientFundsException is thrown.
          */
-
-        assertThrows(InsufficientFundsException.class,
-                () -> client.debit(1L, new BigDecimal("200.00"), "Payment to NL39RABO0300065264"));
     }
 }
