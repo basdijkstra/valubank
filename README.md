@@ -1,7 +1,7 @@
 # ValuBank
 
 A deliberately small online-banking system used in my [Valuable Feedback, Fast](https://www.ontestautomation.com/training/valuable-feedback-fast/) course. It is a
-monorepo with a React frontend and four independent Spring Boot backend
+monorepo with a React frontend and five independent Spring Boot backend
 services.
 
 ```
@@ -11,7 +11,8 @@ valubank/
 │   ├── accounts-service/         Owns customer accounts, balances, interest lookup, login
 │   ├── payments-service/         Owns payments/transfers
 │   ├── fraud-service/            Simple rule-based fraud checks (no DB)
-│   └── interest-rate-service/    Interest-rate configuration store
+│   ├── interest-rate-service/    Interest-rate configuration store
+│   └── currency-rate-service/    Exchange rate lookup (no DB)
 └── scripts/
     ├── start-all.ps1             Start everything (Windows / PowerShell)
     ├── start-all.sh              Start everything (bash)
@@ -32,15 +33,19 @@ valubank/
                  │  Accounts   │◄──┤     Payments     │
                  │  Service    │   │     Service      │
                  │  :8081      │   │     :8082        │
-                 └──────┬──────┘   └─────────┬────────┘
-                        │                    │
-                        ▼                    ▼
-              ┌──────────────────┐   ┌────────────────┐
-              │ Interest Rate /  │   │  Fraud Service │
-              │ Config Service   │   │  :8083         │
-              │ :8084            │   └────────────────┘
-              └──────────────────┘
+                 └──┬───────┬──┘   └─────────┬────────┘
+                    │       │                │
+                    ▼       ▼                ▼
+     ┌──────────────────┐ ┌──────────────────┐ ┌────────────────┐
+     │ Interest Rate /   │ │  Currency Rate   │ │  Fraud Service │
+     │ Config Service    │ │  Service         │ │  :8083         │
+     │ :8084             │ │  :8085           │ └────────────────┘
+     └───────────────────┘ └──────────────────┘
 ```
+
+Accounts Service calls the Currency Rate Service whenever a balance
+mutation's currency doesn't match the account's own currency (e.g. a USD
+payment debiting a EUR account) — same-currency mutations never call it.
 
 Each backend service owns its own database (H2, in-memory) — no service
 reaches into another service's data store directly. Cross-service calls go
@@ -85,11 +90,13 @@ Once running:
 | Payments Service       | http://localhost:8082  |
 | Fraud Service          | http://localhost:8083  |
 | Interest Rate Service  | http://localhost:8084  |
+| Currency Rate Service  | http://localhost:8085  |
 
 Start order matters a little in practice (Accounts Service calls Interest
-Rate Service; Payments Service calls Accounts Service and Fraud Service) but
-every service tolerates its dependencies being down or starting late — it
-just returns an error until the dependency is reachable, rather than crashing.
+Rate Service and Currency Rate Service; Payments Service calls Accounts
+Service and Fraud Service) but every service tolerates its dependencies
+being down or starting late — it just returns an error until the dependency
+is reachable, rather than crashing.
 
 To stop everything (e.g. before rebuilding and re-running after a code
 change):
@@ -101,9 +108,9 @@ change):
 ./scripts/stop-all.sh
 ```
 
-Both find whatever process is listening on each of the five ports and kill
+Both find whatever process is listening on each of the six ports and kill
 it — this works regardless of how the service was started (`start-all`, an
-IDE, run manually), and only ever touches those five ports.
+IDE, run manually), and only ever touches those six ports.
 
 ## Running services individually
 
@@ -114,11 +121,13 @@ cd services/accounts-service
 mvn spring-boot:run
 ```
 
-Same pattern for `payments-service`, `fraud-service`, and
-`interest-rate-service`. Each has its own `application.yml` with its port
-already set, and seeds its own H2 in-memory database on startup — no shared
-setup required. H2 web consoles are available at `/h2-console` on each
-DB-owning service (Accounts, Payments, Interest Rate) while it's running.
+Same pattern for `payments-service`, `fraud-service`, `interest-rate-service`,
+and `currency-rate-service`. Each has its own `application.yml` with its port
+already set, and (where applicable) seeds its own H2 in-memory database on
+startup — no shared setup required. H2 web consoles are available at
+`/h2-console` on each DB-owning service (Accounts, Payments, Interest Rate)
+while it's running. Fraud Service and Currency Rate Service hold no state of
+their own (hardcoded rules / a fixed rate table), so they have no database.
 
 The frontend runs independently too:
 
@@ -170,6 +179,23 @@ Rates can be changed at runtime via `PUT /api/interest-rates/{accountType}`
 on the Interest Rate Service — Accounts Service picks up the new value on its
 next lookup, with no restart needed.
 
+### Exchange rates (Currency Rate Service — hardcoded, no DB)
+
+| From | To  | Rate |
+|------|-----|------|
+| EUR  | USD | 1.08 |
+| USD  | EUR | 0.93 |
+| EUR  | GBP | 0.86 |
+| GBP  | EUR | 1.16 |
+| USD  | GBP | 0.79 |
+| GBP  | USD | 1.27 |
+
+Fixed at startup, no admin endpoint to change them — these are workshop
+fixtures, not something this service manages the lifecycle of. Each direction
+is stored explicitly rather than derived by inverting the other, so a
+round trip isn't assumed to be perfectly reciprocal (real spot rates aren't
+either).
+
 ### Fraud rules (Fraud Service — hardcoded, no DB)
 
 - Payments over **10,000** are rejected ("Amount exceeds maximum allowed per
@@ -189,13 +215,19 @@ No seed data — the Payments DB starts empty and fills up as you use the app.
    checks the balance.
 3. Payments Service calls the Fraud Service to check the payment.
 4. If approved and funds are sufficient, Payments Service calls Accounts
-   Service to debit the account.
+   Service to debit the account, passing along the payment's currency.
+   If that currency differs from the source account's own currency, Accounts
+   Service converts the amount via the Currency Rate Service before applying
+   it — Payments Service itself never does currency math.
 5. Payments Service records the outcome (`COMPLETED`, `REJECTED`, or
    `FAILED`, with a reason where applicable) and returns it to the frontend.
+   The converted amount is not part of that response — only Accounts
+   Service's own balance reflects it.
 
 Try a payment over 10,000, or to `NL99BLOCKED0000000`, to see a rejection;
 try stopping the Accounts Service mid-demo to see a `FAILED` payment and the
-frontend's error handling.
+frontend's error handling; try paying in USD or GBP from a EUR account to see
+the conversion applied to the resulting balance.
 
 ## Adding interest to an account
 

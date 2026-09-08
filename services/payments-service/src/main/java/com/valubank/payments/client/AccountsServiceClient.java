@@ -62,9 +62,9 @@ public class AccountsServiceClient {
      * @throws InsufficientFundsException     if the Accounts Service rejects the debit with 409
      * @throws DependencyUnavailableException if the Accounts Service could not be reached or fails unexpectedly
      */
-    public AccountDto debit(Long accountId, BigDecimal amount, String reason) {
+    public AccountDto debit(Long accountId, BigDecimal amount, String currency, String reason) {
         String url = accountsServiceUrl + "/api/accounts/" + accountId + "/balance-mutations";
-        BalanceMutationRequest request = new BalanceMutationRequest("DEBIT", amount, reason);
+        BalanceMutationRequest request = new BalanceMutationRequest("DEBIT", amount, reason, currency);
         try {
             return restTemplate.postForObject(url, new HttpEntity<>(request), AccountDto.class);
         } catch (HttpClientErrorException.Conflict e) {

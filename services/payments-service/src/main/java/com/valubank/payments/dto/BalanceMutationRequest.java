@@ -11,14 +11,16 @@ public class BalanceMutationRequest {
     private String type;
     private BigDecimal amount;
     private String reason;
+    private String currency;
 
     public BalanceMutationRequest() {
     }
 
-    public BalanceMutationRequest(String type, BigDecimal amount, String reason) {
+    public BalanceMutationRequest(String type, BigDecimal amount, String reason, String currency) {
         this.type = type;
         this.amount = amount;
         this.reason = reason;
+        this.currency = currency;
     }
 
     public String getType() {
@@ -43,5 +45,13 @@ public class BalanceMutationRequest {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 }

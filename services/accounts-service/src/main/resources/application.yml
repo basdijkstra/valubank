@@ -22,3 +22,5 @@ spring:
 valubank:
   interest-rate-service:
     url: http://localhost:8084
+  currency-rate-service:
+    url: http://localhost:8085

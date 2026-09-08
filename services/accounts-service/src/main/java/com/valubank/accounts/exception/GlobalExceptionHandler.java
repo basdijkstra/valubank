@@ -32,4 +32,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInterestRateServiceException(InterestRateServiceException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse("Interest rate service unavailable"));
     }
+
+    @ExceptionHandler(CurrencyRateServiceException.class)
+    public ResponseEntity<ErrorResponse> handleCurrencyRateServiceException(CurrencyRateServiceException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new ErrorResponse("Currency rate service unavailable"));
+    }
 }

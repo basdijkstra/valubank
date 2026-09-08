@@ -1,9 +1,11 @@
 package com.valubank.accounts.service;
 
+import com.valubank.accounts.client.CurrencyRateClient;
 import com.valubank.accounts.client.InterestRateClient;
 import com.valubank.accounts.dto.AccountDto;
 import com.valubank.accounts.dto.AdminAccountDto;
 import com.valubank.accounts.dto.BalanceMutationRequest;
+import com.valubank.accounts.dto.CurrencyRateServiceRate;
 import com.valubank.accounts.dto.InterestApplicationResponse;
 import com.valubank.accounts.dto.InterestRateResponse;
 import com.valubank.accounts.dto.InterestRateServiceRate;
@@ -25,12 +27,14 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final InterestRateClient interestRateClient;
+    private final CurrencyRateClient currencyRateClient;
 
     public AccountService(AccountRepository accountRepository, CustomerRepository customerRepository,
-                           InterestRateClient interestRateClient) {
+                           InterestRateClient interestRateClient, CurrencyRateClient currencyRateClient) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
         this.interestRateClient = interestRateClient;
+        this.currencyRateClient = currencyRateClient;
     }
 
     public List<AccountDto> getAccountsForCustomer(Long customerId) {
@@ -65,7 +69,7 @@ public class AccountService {
 
     public AccountDto applyBalanceMutation(Long accountId, BalanceMutationRequest request) {
         Account account = findAccountOrThrow(accountId);
-        BigDecimal amount = request.getAmount();
+        BigDecimal amount = convertToAccountCurrency(request.getAmount(), request.getCurrency(), account.getCurrency());
 
         BigDecimal newBalance;
         if ("DEBIT".equalsIgnoreCase(request.getType())) {
@@ -100,6 +104,18 @@ public class AccountService {
 
         return new InterestApplicationResponse(account.getId(), account.getAccountType(), previousBalance,
                 ratePercentage, interestAmount, newBalance, account.getCurrency());
+    }
+
+    // Converts a mutation amount into the account's own currency, if needed. A null
+    // mutation currency (or one that already matches the account) is treated as
+    // "already in the right currency" - no exchange rate lookup, no dependency call.
+    private BigDecimal convertToAccountCurrency(BigDecimal amount, String mutationCurrency, String accountCurrency) {
+        if (mutationCurrency == null || mutationCurrency.equalsIgnoreCase(accountCurrency)) {
+            return amount;
+        }
+
+        CurrencyRateServiceRate rate = currencyRateClient.getRate(mutationCurrency, accountCurrency);
+        return amount.multiply(rate.getRate()).setScale(2, RoundingMode.HALF_UP);
     }
 
     private Account findAccountOrThrow(Long accountId) {

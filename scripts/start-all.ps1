@@ -6,6 +6,7 @@ if (-not $root) { $root = (Get-Item "$PSScriptRoot\..").FullName }
 
 $services = @(
     @{ Name = "interest-rate-service"; Path = "$root\services\interest-rate-service" },
+    @{ Name = "currency-rate-service"; Path = "$root\services\currency-rate-service" },
     @{ Name = "fraud-service";         Path = "$root\services\fraud-service" },
     @{ Name = "accounts-service";      Path = "$root\services\accounts-service" },
     @{ Name = "payments-service";      Path = "$root\services\payments-service" }
@@ -22,6 +23,7 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$root\fronten
 Write-Host ""
 Write-Host "All services launching in separate windows:"
 Write-Host "  Interest Rate Service : http://localhost:8084"
+Write-Host "  Currency Rate Service  : http://localhost:8085"
 Write-Host "  Fraud Service          : http://localhost:8083"
 Write-Host "  Accounts Service       : http://localhost:8081"
 Write-Host "  Payments Service       : http://localhost:8082"

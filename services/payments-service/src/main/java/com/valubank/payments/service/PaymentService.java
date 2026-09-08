@@ -84,6 +84,7 @@ public class PaymentService {
             accountsServiceClient.debit(
                     request.getFromAccountId(),
                     request.getAmount(),
+                    request.getCurrency(),
                     "Payment to " + request.getToAccountIban());
         } catch (InsufficientFundsException e) {
             payment.setStatus(STATUS_REJECTED);

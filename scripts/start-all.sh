@@ -27,6 +27,7 @@ start_service() {
 }
 
 start_service "interest-rate-service" "$ROOT/services/interest-rate-service"
+start_service "currency-rate-service" "$ROOT/services/currency-rate-service"
 start_service "fraud-service" "$ROOT/services/fraud-service"
 start_service "accounts-service" "$ROOT/services/accounts-service"
 start_service "payments-service" "$ROOT/services/payments-service"
@@ -42,6 +43,7 @@ PIDS+=($!)
 echo ""
 echo "All services starting (logs in $LOG_DIR):"
 echo "  Interest Rate Service : http://localhost:8084"
+echo "  Currency Rate Service  : http://localhost:8085"
 echo "  Fraud Service          : http://localhost:8083"
 echo "  Accounts Service       : http://localhost:8081"
 echo "  Payments Service       : http://localhost:8082"

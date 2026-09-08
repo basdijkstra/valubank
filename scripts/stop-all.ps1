@@ -7,6 +7,7 @@ $ports = [ordered]@{
     8082 = "payments-service"
     8083 = "fraud-service"
     8084 = "interest-rate-service"
+    8085 = "currency-rate-service"
     5173 = "frontend"
 }
 

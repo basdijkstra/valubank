@@ -222,13 +222,16 @@ export default function AccountDetail() {
 
             <div className="form-field">
               <label htmlFor="payment-currency">Currency</label>
-              <input
+              <select
                 id="payment-currency"
-                type="text"
                 value={form.currency}
                 onChange={(e) => handleFormChange('currency', e.target.value)}
                 required
-              />
+              >
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+              </select>
             </div>
 
             <div className="form-field">

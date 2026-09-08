@@ -3,8 +3,8 @@
 # time - only touches these five ports, regardless of how the process was
 # started (start-all.sh, an IDE, manually, ...).
 
-PORTS=(8081 8082 8083 8084 5173)
-NAMES=(accounts-service payments-service fraud-service interest-rate-service frontend)
+PORTS=(8081 8082 8083 8084 8085 5173)
+NAMES=(accounts-service payments-service fraud-service interest-rate-service currency-rate-service frontend)
 
 stop_port() {
     local port="$1"
