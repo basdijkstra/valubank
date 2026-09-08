@@ -5,6 +5,8 @@ import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
+import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import com.valubank.accounts.entity.Account;
 import com.valubank.accounts.repository.AccountRepository;
@@ -28,6 +30,7 @@ import java.math.BigDecimal;
  */
 @Provider("accounts-service")
 @PactFolder("src/test/pacts")
+//@PactBroker(url="${PACT_BROKER_BASE_URL}", authentication = @PactBrokerAuth(token = "${PACT_BROKER_TOKEN}"))
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AccountsServiceProviderPactTest {
 
