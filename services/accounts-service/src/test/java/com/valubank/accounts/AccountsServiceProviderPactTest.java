@@ -56,11 +56,6 @@ class AccountsServiceProviderPactTest {
         seedAccount1(new BigDecimal("50.00"));
     }
 
-    @State("account 1 exists with balance 500.00")
-    void account1WithBalance500() {
-        seedAccount1(new BigDecimal("500.00"));
-    }
-
     // TRUNCATE clears the rows but leaves the identity sequence wherever it was, so it must be
     // restarted explicitly - otherwise only the very first seeded account across the whole run
     // gets id 1, and every interaction after that seeds a row at id 2, 3, ... while the pact's

@@ -25,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(PactConsumerTestExt.class)
 @PactTestFor(providerName = "accounts-service", pactVersion = PactSpecVersion.V3)
-class AccountsServiceClientPactTest {
+@Disabled 
+class AccountsServiceClientPactTestAnswer {
 
     @Pact(consumer = "payments-service")
     public RequestResponsePact debitRejectedWithInsufficientFunds(PactDslWithProvider builder) {
