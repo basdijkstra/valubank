@@ -13,7 +13,6 @@ import au.com.dius.pact.core.model.PactSpecVersion;
 import com.valubank.payments.client.AccountsServiceClient;
 import com.valubank.payments.exception.InsufficientFundsException;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.web.client.RestTemplate;
@@ -25,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(PactConsumerTestExt.class)
 @PactTestFor(providerName = "accounts-service", pactVersion = PactSpecVersion.V3)
-@Disabled 
 class AccountsServiceClientPactTestAnswer {
 
     @Pact(consumer = "payments-service")
