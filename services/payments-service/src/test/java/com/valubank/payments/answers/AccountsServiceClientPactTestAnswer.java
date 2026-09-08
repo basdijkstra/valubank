@@ -1,4 +1,4 @@
-package com.valubank.payments;
+package com.valubank.payments.answers;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.DslPart;
