@@ -5,10 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  SERVICES: "accounts-service payments-service fraud-service interest-rate-service"
-  PORTS: "8081 8082 8083 8084 8085 5173"
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -20,6 +16,29 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Discover services and ports
+        run: |
+          SERVICES=$(for d in services/*/; do
+            [ -f "${d}pom.xml" ] && basename "$d"
+          done | sort | tr '\n' ' ')
+          echo "SERVICES=$SERVICES" >> "$GITHUB_ENV"
+
+          PORTS=""
+          for svc in $SERVICES; do
+            port=$(grep -m1 'port:' "services/$svc/src/main/resources/application.yml" | grep -oE '[0-9]+')
+            if [ -n "$port" ]; then
+              PORTS="$PORTS $port"
+            else
+              echo "::warning::No port found for $svc, skipping liveness check for it"
+            fi
+          done
+          # Frontend isn't a Maven service, so it's not auto-discovered - added explicitly.
+          PORTS="$PORTS 5173"
+          echo "PORTS=$PORTS" >> "$GITHUB_ENV"
+
+          echo "Discovered services: $SERVICES"
+          echo "Discovered ports:    $PORTS"
 
       - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v4
