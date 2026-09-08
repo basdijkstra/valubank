@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  SERVICES: "accounts-service payments-service fraud-service interest-rate-service currency-rate-service"
+  SERVICES: "accounts-service payments-service fraud-service interest-rate-service"
   PORTS: "8081 8082 8083 8084 8085 5173"
 
 jobs:
