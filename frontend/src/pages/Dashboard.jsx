@@ -51,6 +51,22 @@ export default function Dashboard() {
       )}
 
       {!loading && !error && accounts.length > 0 && (
+        <div className="card dashboard-totals">
+          {Object.entries(
+            accounts.reduce((totals, account) => {
+              totals[account.currency] = (totals[account.currency] || 0) + account.balance
+              return totals
+            }, {})
+          ).map(([currency, total]) => (
+            <div key={currency} className="dashboard-totals-row">
+              <span className="label">Total ({currency})</span>
+              <span className="dashboard-totals-amount">{formatBalance(total, currency)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && accounts.length > 0 && (
         <div className="account-grid">
           {accounts.map((account) => (
             <Link
