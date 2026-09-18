@@ -157,6 +157,14 @@ a {
   outline-offset: 1px;
 }
 
+.field-error {
+  font-size: 0.82rem;
+}
+
+.form-field input[aria-invalid="true"] {
+  border-color: var(--color-error-text);
+}
+
 .form-field input:read-only {
   background-color: var(--color-bg);
   color: var(--color-text-muted);

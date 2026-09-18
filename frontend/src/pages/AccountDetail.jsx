@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { getAccount, getInterestRate } from '../api/accounts'
 import { createPayment, getPaymentsForAccount } from '../api/payments'
 import { formatBalance } from '../utils/format'
+import { isValidIban } from '../utils/iban'
 
 function formatTimestamp(timestamp) {
   if (!timestamp) return ''
@@ -39,6 +40,7 @@ export default function AccountDetail() {
   const [form, setForm] = useState(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [ibanError, setIbanError] = useState('')
   const [lastPaymentResult, setLastPaymentResult] = useState(null)
 
   const loadAccount = useCallback(async () => {
@@ -95,12 +97,27 @@ export default function AccountDetail() {
 
   function handleFormChange(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }))
+    if (field === 'toAccountIban') {
+      setIbanError('')
+    }
+  }
+
+  function handleIbanBlur() {
+    if (form.toAccountIban && !isValidIban(form.toAccountIban)) {
+      setIbanError('Please enter a valid IBAN (e.g. NL91ABNA0417164300).')
+    }
   }
 
   async function handleSubmitPayment(event) {
     event.preventDefault()
     setSubmitError('')
     setLastPaymentResult(null)
+
+    if (!isValidIban(form.toAccountIban)) {
+      setIbanError('Please enter a valid IBAN (e.g. NL91ABNA0417164300).')
+      return
+    }
+
     setSubmitting(true)
 
     try {
@@ -192,8 +209,11 @@ export default function AccountDetail() {
                 type="text"
                 value={form.toAccountIban}
                 onChange={(e) => handleFormChange('toAccountIban', e.target.value)}
+                onBlur={handleIbanBlur}
+                aria-invalid={Boolean(ibanError)}
                 required
               />
+              {ibanError && <span className="text-error field-error">{ibanError}</span>}
             </div>
 
             <div className="form-field">

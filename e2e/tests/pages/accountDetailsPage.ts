@@ -4,10 +4,12 @@ export class AccountDetailsPage {
 
     private readonly page: Page;
     readonly errorMessageLocator;
+    readonly ibanValidationErrorLocator;
 
     constructor(page: Page) {
         this.page = page;
         this.errorMessageLocator = this.page.locator('xpath=//div[contains(@class, "banner-error")]');
+        this.ibanValidationErrorLocator = this.page.locator('#payment-to-iban + .field-error');
     }
 
     async makePayment(recipientIban: string, recipientName: string, amount: string, description: string) {
