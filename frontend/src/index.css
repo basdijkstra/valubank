@@ -157,6 +157,12 @@ a {
   outline-offset: 1px;
 }
 
+.form-field input:read-only {
+  background-color: var(--color-bg);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
 .btn {
   font-size: 1rem;
   padding: 0.6rem 1.1rem;
@@ -239,6 +245,10 @@ a {
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--color-primary-dark);
+}
+
+.balance-negative {
+  color: var(--color-error-text) !important;
 }
 
 .account-grid {

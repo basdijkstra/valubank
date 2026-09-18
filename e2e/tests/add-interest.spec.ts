@@ -21,8 +21,6 @@ for (const { username, password, iban, type, interestRate } of testdata) {
 
     const initialBalance = await accountsOverviewPage.getAccountBalance(iban);
 
-    console.log(`Initial balance for ${username}'s ${type} account: ${initialBalance}`);
-
     await accountsOverviewPage.logout();
 
     await loginPage.loginAs('admin', 'admin123');
@@ -34,8 +32,6 @@ for (const { username, password, iban, type, interestRate } of testdata) {
     await loginPage.loginAs(username, password);
     
     const updatedBalance = await accountsOverviewPage.getAccountBalance(iban);
-
-    console.log(`Updated balance for ${username}'s ${type} account: ${updatedBalance}`);
 
     expect(currency(updatedBalance)).toEqual(currency(initialBalance).multiply(1 + interestRate));
   });

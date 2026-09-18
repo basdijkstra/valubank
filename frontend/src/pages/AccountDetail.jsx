@@ -150,7 +150,7 @@ export default function AccountDetail() {
           </div>
           <div className="account-summary-row">
             <span className="label">Balance</span>
-            <span className="account-summary-balance">
+            <span className={`account-summary-balance${account.balance < 0 ? ' balance-negative' : ''}`}>
               {formatBalance(account.balance, account.currency)}
             </span>
           </div>
@@ -226,7 +226,7 @@ export default function AccountDetail() {
                 id="payment-currency"
                 type="text"
                 value={form.currency}
-                onChange={(e) => handleFormChange('currency', e.target.value)}
+                readOnly
                 required
               />
             </div>

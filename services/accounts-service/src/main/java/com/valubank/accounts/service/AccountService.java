@@ -63,6 +63,9 @@ public class AccountService {
         return new InterestRateResponse(account.getId(), account.getAccountType(), rate.getRatePercentage());
     }
 
+    // CHECKING accounts may run an overdraft down to this floor; SAVINGS accounts may not go negative at all.
+    private static final BigDecimal CHECKING_OVERDRAFT_FLOOR = BigDecimal.valueOf(-5000);
+
     public AccountDto applyBalanceMutation(Long accountId, BalanceMutationRequest request) {
         Account account = findAccountOrThrow(accountId);
         BigDecimal amount = request.getAmount();
@@ -70,7 +73,10 @@ public class AccountService {
         BigDecimal newBalance;
         if ("DEBIT".equalsIgnoreCase(request.getType())) {
             newBalance = account.getBalance().subtract(amount);
-            if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            BigDecimal floor = "CHECKING".equalsIgnoreCase(account.getAccountType())
+                    ? CHECKING_OVERDRAFT_FLOOR
+                    : BigDecimal.ZERO;
+            if (newBalance.compareTo(floor) < 0) {
                 throw new InsufficientFundsException("Insufficient funds");
             }
         } else {

@@ -60,7 +60,9 @@ export default function Dashboard() {
           ).map(([currency, total]) => (
             <div key={currency} className="dashboard-totals-row">
               <span className="label">Total ({currency})</span>
-              <span className="dashboard-totals-amount">{formatBalance(total, currency)}</span>
+              <span className={`dashboard-totals-amount${total < 0 ? ' balance-negative' : ''}`}>
+                {formatBalance(total, currency)}
+              </span>
             </div>
           ))}
         </div>
@@ -76,7 +78,7 @@ export default function Dashboard() {
             >
               <div className="account-card-type">{account.accountType}</div>
               <div className="account-card-iban">{account.iban}</div>
-              <div className="account-card-balance">
+              <div className={`account-card-balance${account.balance < 0 ? ' balance-negative' : ''}`}>
                 {formatBalance(account.balance, account.currency)}
               </div>
             </Link>
