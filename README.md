@@ -1,7 +1,7 @@
 # ValuBank
 
 A deliberately small online-banking system used in my [Valuable Feedback, Fast](https://www.ontestautomation.com/training/valuable-feedback-fast/) course. It is a
-monorepo with a React frontend and four independent Spring Boot backend
+monorepo with a React frontend and five independent Spring Boot backend
 services.
 
 ```
@@ -11,7 +11,8 @@ valubank/
 │   ├── accounts-service/         Owns customer accounts, balances, interest lookup, login
 │   ├── payments-service/         Owns payments/transfers
 │   ├── fraud-service/            Simple rule-based fraud checks (no DB)
-│   └── interest-rate-service/    Interest-rate configuration store
+│   ├── interest-rate-service/    Interest-rate configuration store
+│   └── currency-rate-service/    Fixed exchange rate lookups (no DB)
 └── scripts/
     ├── start-all.ps1             Start everything (Windows / PowerShell)
     ├── start-all.sh              Start everything (bash)
@@ -32,14 +33,14 @@ valubank/
                  │  Accounts   │◄──┤     Payments     │
                  │  Service    │   │     Service      │
                  │  :8081      │   │     :8082        │
-                 └──────┬──────┘   └─────────┬────────┘
-                        │                    │
-                        ▼                    ▼
-              ┌──────────────────┐   ┌────────────────┐
-              │ Interest Rate /  │   │  Fraud Service │
-              │ Config Service   │   │  :8083         │
-              │ :8084            │   └────────────────┘
-              └──────────────────┘
+                 └──┬───────┬──┘   └─────────┬────────┘
+                    │       │                │
+                    ▼       ▼                ▼
+      ┌──────────────────┐ ┌──────────────────┐ ┌────────────────┐
+      │ Interest Rate /   │ │ Currency Rate    │ │  Fraud Service │
+      │ Config Service    │ │ Service          │ │  :8083         │
+      │ :8084             │ │ :8085            │ └────────────────┘
+      └───────────────────┘ └──────────────────┘
 ```
 
 Each backend service owns its own database (H2, in-memory) — no service
@@ -85,11 +86,13 @@ Once running:
 | Payments Service       | http://localhost:8082  |
 | Fraud Service          | http://localhost:8083  |
 | Interest Rate Service  | http://localhost:8084  |
+| Currency Rate Service  | http://localhost:8085  |
 
 Start order matters a little in practice (Accounts Service calls Interest
-Rate Service; Payments Service calls Accounts Service and Fraud Service) but
-every service tolerates its dependencies being down or starting late — it
-just returns an error until the dependency is reachable, rather than crashing.
+Rate Service and Currency Rate Service; Payments Service calls Accounts
+Service and Fraud Service) but every service tolerates its dependencies being
+down or starting late — it just returns an error until the dependency is
+reachable, rather than crashing.
 
 To stop everything (e.g. before rebuilding and re-running after a code
 change):
@@ -101,9 +104,9 @@ change):
 ./scripts/stop-all.sh
 ```
 
-Both find whatever process is listening on each of the five ports and kill
+Both find whatever process is listening on each of the six ports and kill
 it — this works regardless of how the service was started (`start-all`, an
-IDE, run manually), and only ever touches those five ports.
+IDE, run manually), and only ever touches those six ports.
 
 ## Running services individually
 
@@ -114,11 +117,13 @@ cd services/accounts-service
 mvn spring-boot:run
 ```
 
-Same pattern for `payments-service`, `fraud-service`, and
-`interest-rate-service`. Each has its own `application.yml` with its port
-already set, and seeds its own H2 in-memory database on startup — no shared
-setup required. H2 web consoles are available at `/h2-console` on each
-DB-owning service (Accounts, Payments, Interest Rate) while it's running.
+Same pattern for `payments-service`, `fraud-service`, `interest-rate-service`,
+and `currency-rate-service`. Each has its own `application.yml` with its port
+already set; the DB-backed services (Accounts, Payments, Interest Rate) seed
+their own H2 in-memory database on startup — no shared setup required. Fraud
+Service and Currency Rate Service have no database at all — both serve fixed,
+in-memory data. H2 web consoles are available at `/h2-console` on each
+DB-owning service while it's running.
 
 The frontend runs independently too:
 
@@ -179,6 +184,18 @@ next lookup, with no restart needed.
   is flagged for fraud").
 - Everything else is approved.
 
+### Currency conversion (Currency Rate Service — hardcoded, no DB)
+
+Payments can be sent in EUR, USD, or GBP, regardless of the source account's
+own currency. When the payment currency differs from the account's currency,
+Accounts Service converts the amount via the Currency Rate Service before
+applying it to the balance. If the payment currency matches the account's own
+currency, no conversion call is made.
+
+Exchange rates are a fixed, in-memory table — there's no admin endpoint to
+change them and no guarantee every currency pair in both directions is
+configured.
+
 ### Payments (Payments Service)
 
 No seed data — the Payments DB starts empty and fills up as you use the app.
@@ -190,7 +207,9 @@ No seed data — the Payments DB starts empty and fills up as you use the app.
    checks the balance.
 3. Payments Service calls the Fraud Service to check the payment.
 4. If approved and funds are sufficient, Payments Service calls Accounts
-   Service to debit the account.
+   Service to debit the account. If the payment currency differs from the
+   account's own currency, Accounts Service converts the amount first (see
+   "Currency conversion" above).
 5. Payments Service records the outcome (`COMPLETED`, `REJECTED`, or
    `FAILED`, with a reason where applicable) and returns it to the frontend.
 
