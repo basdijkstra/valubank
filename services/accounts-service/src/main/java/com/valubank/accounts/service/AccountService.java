@@ -1,9 +1,11 @@
 package com.valubank.accounts.service;
 
+import com.valubank.accounts.client.CurrencyRateClient;
 import com.valubank.accounts.client.InterestRateClient;
 import com.valubank.accounts.dto.AccountDto;
 import com.valubank.accounts.dto.AdminAccountDto;
 import com.valubank.accounts.dto.BalanceMutationRequest;
+import com.valubank.accounts.dto.CurrencyRateServiceRate;
 import com.valubank.accounts.dto.InterestApplicationResponse;
 import com.valubank.accounts.dto.InterestRateResponse;
 import com.valubank.accounts.dto.InterestRateServiceRate;
@@ -25,12 +27,14 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final InterestRateClient interestRateClient;
+    private final CurrencyRateClient currencyRateClient;
 
     public AccountService(AccountRepository accountRepository, CustomerRepository customerRepository,
-                           InterestRateClient interestRateClient) {
+                           InterestRateClient interestRateClient, CurrencyRateClient currencyRateClient) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
         this.interestRateClient = interestRateClient;
+        this.currencyRateClient = currencyRateClient;
     }
 
     public List<AccountDto> getAccountsForCustomer(Long customerId) {
@@ -72,20 +76,34 @@ public class AccountService {
 
         BigDecimal newBalance;
         if ("DEBIT".equalsIgnoreCase(request.getType())) {
-            newBalance = account.getBalance().subtract(amount);
             BigDecimal floor = "CHECKING".equalsIgnoreCase(account.getAccountType())
                     ? CHECKING_OVERDRAFT_FLOOR
                     : BigDecimal.ZERO;
-            if (newBalance.compareTo(floor) < 0) {
+            if (account.getBalance().subtract(amount).compareTo(floor) < 0) {
                 throw new InsufficientFundsException("Insufficient funds");
             }
+            BigDecimal convertedAmount = convertToAccountCurrency(amount, request.getCurrency(), account.getCurrency());
+            newBalance = account.getBalance().subtract(convertedAmount);
         } else {
-            newBalance = account.getBalance().add(amount);
+            BigDecimal convertedAmount = convertToAccountCurrency(amount, request.getCurrency(), account.getCurrency());
+            newBalance = account.getBalance().add(convertedAmount);
         }
 
         account.setBalance(newBalance);
         accountRepository.save(account);
         return AccountDto.from(account);
+    }
+
+    // Converts a mutation amount into the account's own currency, if needed. A null
+    // mutation currency (or one that already matches the account) is treated as
+    // "already in the right currency" - no exchange rate lookup, no dependency call.
+    private BigDecimal convertToAccountCurrency(BigDecimal amount, String mutationCurrency, String accountCurrency) {
+        if (mutationCurrency == null || mutationCurrency.equalsIgnoreCase(accountCurrency)) {
+            return amount;
+        }
+
+        CurrencyRateServiceRate rate = currencyRateClient.getRate(accountCurrency, mutationCurrency);
+        return amount.multiply(rate.getRate()).setScale(2, RoundingMode.HALF_UP);
     }
 
     // Calculates interest on the current balance using the applicable rate from the
