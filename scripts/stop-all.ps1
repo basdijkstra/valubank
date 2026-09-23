@@ -1,5 +1,5 @@
 # Stops whatever is listening on ValuBank's service ports. Safe to run any
-# time - only touches these five ports, regardless of how the process was
+# time - only touches these six ports, regardless of how the process was
 # started (start-all.ps1, an IDE, manually, ...).
 
 $ports = [ordered]@{
@@ -7,6 +7,7 @@ $ports = [ordered]@{
     8082 = "payments-service"
     8083 = "fraud-service"
     8084 = "interest-rate-service"
+    8085 = "currency-rate-service"
     5173 = "frontend"
 }
 
