@@ -12,8 +12,7 @@
      source account's own currency.
   2. If the selected payment currency differs from the account's currency, the amount is converted to the
      account's currency before the balance is debited.
-  3. If the selected payment currency matches the account's currency, no conversion takes place — the amount
-     is debited as entered.
+  3. If the selected payment currency matches the account's currency, no conversion takes place — the amount is debited as entered.
   4. Existing overdraft rules (CHECKING accounts may go negative down to -5000; SAVINGS accounts may not go
      negative) continue to be enforced correctly for converted payments.
   5. Existing fraud detection rules continue to apply to payments made in this feature.
