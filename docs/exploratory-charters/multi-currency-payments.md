@@ -1,30 +1,36 @@
 # Exploratory charter: multi-currency payments
 
-**Mission:** Explore payments made in a currency other than the source
-account's own currency, to find places where actual behavior diverges from
-the documented conversion, overdraft, and fraud rules.
+**Mission:** Explore ValuBank's new multi-currency payment functionality to discover incorrect, unsafe, or surprising behaviour.
 
-**Scope / focus areas:**
-- Making a payment where the selected currency differs from the source
-  account's currency (EUR, USD, GBP).
-- Interaction between currency conversion and the overdraft floor
-  (CHECKING accounts down to -5000, SAVINGS accounts not below 0).
-- Interaction between currency conversion and fraud rejection (payments
-  over 10,000, blocked IBAN).
-- Whether the amount actually debited (check via the account/API, not just
-  the success message) matches what the documented exchange behavior would
-  predict.
-- Payments in a currency not currently used by any seeded account.
+Focus particularly on whether payments behave correctly when the payment currency is the same as, or different from, the source account's currency.
 
-**Out of scope:** Login/session handling, admin dashboard, interest
-calculation, IBAN format validation.
+The goal is to learn about the behaviour of the feature and provide valuable feedback, not merely to confirm the acceptance criteria.
 
-**Risk areas / hints:** Cross-currency conversion, and its ordering
-relative to other checks (overdraft, fraud), are new. Pay attention to
-whether the *order* checks happen in produces a different result than you'd
-expect from reading the documented rules independently. Also check what
-happens for a currency pair or account currency the app doesn't obviously
-support.
+**Product context:**
+ValuBank customers can now select a payment currency independently of the currency of their source account.
+
+The supported payment currencies are:
+
+* EUR
+* USD
+* GBP
+
+When the payment currency differs from the account currency, the payment amount is converted to the account currency before the account is debited. When the payment currency matches the account currency, no currency conversion takes place.
+
+Existing account and payment rules continue to apply, including:
+
+* CHECKING accounts may go down to -5000.
+* SAVINGS accounts may not go below 0.
+* Existing fraud detection rules apply to payments.
+
+**Exploration:**
+Explore the feature using the available ValuBank testing interfaces.
+
+Consider different account and payment currencies, payment amounts, and account situations.
+
+Follow interesting observations and investigate behaviour that appears incorrect, unexpected, or surprising.
+
+Use your available testing time to decide what is worth investigating.
 
 **Time-box:** 10 minutes.
 

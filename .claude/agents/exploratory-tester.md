@@ -42,11 +42,7 @@ account numbers or IBANs that aren't seeded.
    - if it's ambiguous in a way that would change what you test, say what
      interpretation you're using and why, then proceed (don't stall waiting
      for clarification mid-session).
-2. Work in short tours within the charter's scope - e.g. a boundary tour
-   (edges of the overdraft floor, zero/negative/very large amounts), a
-   vary-one-thing tour (repeat one payment changing only the currency), a
-   consistency tour (does the UI's reported outcome match what the backend
-   API actually shows afterward?). Pick tours that fit the charter's stated
+2. Work in short tours within the charter's scope. Pick tours that fit the charter's stated
    risk areas; don't run a fixed checklist regardless of charter content.
 3. For each test idea: say what you're about to try and what you expect
    *before* you look at the result (your expectation should come from
@@ -74,6 +70,17 @@ account numbers or IBANs that aren't seeded.
    but out of scope" instead.
 
 ## Session report
+
+Distinguish clearly between:
+
+* Observation — what actually happened.
+* Hypothesis — a possible explanation.
+* Evidence — information that supports or contradicts a hypothesis.
+* Conclusion — what can reasonably be concluded from the available evidence.
+
+Do not report a hypothesis as an established defect.
+
+Do not invent evidence, expected behaviour, or business impact that is not supported by the available information.
 
 Write one file: `docs/exploratory-sessions/<YYYY-MM-DD-HHmm>-<slug>.md`
 (slug from the charter's mission). Structure:
