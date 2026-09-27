@@ -212,7 +212,14 @@ configured.
 
 ### Payments (Payments Service)
 
-No seed data — the Payments DB starts empty and fills up as you use the app.
+Each account is seeded with 10 payments (40 total), spread over the last
+~50 days, mostly `COMPLETED` with one `REJECTED` per account (destination
+`NL99BLOCKED0000000`, the seeded fraud rule). Several payments per account
+use a currency other than the account's own (USD/GBP payments from EUR
+accounts and vice versa) to exercise currency conversion out of the box.
+These are inserted directly into the Payments DB on startup — they do not go
+through the real payment flow, so account balances (seeded by the Accounts
+Service) are unaffected.
 
 ## Payment flow (what happens on "make a payment")
 

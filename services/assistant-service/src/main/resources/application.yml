@@ -13,5 +13,5 @@ valubank:
   payments-service:
     url: http://localhost:8082
   anthropic:
-    api-key: ${ANTHROPIC_API_KEY:}
+    api-key: ${VALUBANK_API_KEY:}
     model: claude-haiku-4-5-20251001
