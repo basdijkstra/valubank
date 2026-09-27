@@ -1,0 +1,13 @@
+# Session log: multi-currency payments (2026-09-27 11:22)
+
+1. **Reachability and baseline.** Checked ports 5173 and 8081-8085 (all responding). Listed accounts. Observed non-seeded state: acct 2 SAVINGS -220.00, acct 3 -5094.00, acct 4 -2994.31 USD; acct 1 clean at 2500.00. Next: find the rate table and payment shapes.
+2. **Discover interfaces.** Probed endpoints. `GET :8085/api/currency-rates` gives 5 pairs (no USD->GBP). `GET :8082/api/accounts/{id}/payments` gives history (prior sessions' payments visible). Next: baseline conversion on the clean account 1.
+3. **Conversion from the EUR account.** Paid 100 USD, 100 GBP and 100 EUR from acct 1, reading the balance after each. Debits were 108 / 86 / 100 EUR, against an expected 93 / 116 / 100. The factors match the reverse pairs. Next: check the opposite direction on the USD account.
+4. **Conversion from the USD account.** (Side effect: accidentally invoked the interest PUT on acct 4, -2994.31 -> -2997.30. Recorded, not pursued.) 100 EUR debited 93 USD (expected 108). 100 GBP FAILED with "Accounts service unavailable", balance unchanged. 10 USD was correct. Next: does the wrong conversion break the overdraft limit?
+5. **Overdraft limit.** Paid 7000 USD from acct 1 (2206 EUR). Result: COMPLETED, balance -5354.00, below -5000. A 1 EUR control was REJECTED. Next: input validation on the one account with headroom.
+6. **Validation probes (acct 4).** 1899.71 USD (1 cent over headroom) was REJECTED (correct). -100 EUR was COMPLETED and credited +93 USD. 0 USD was COMPLETED. JPY FAILED with "Accounts service unavailable". "usd" was COMPLETED. Next: UI check.
+7. **UI.** Logged-in Bob session, acct 4 detail. The dropdown offers EUR/USD/GBP. Sent 5 GBP via the form and saw "FAILED - Accounts service unavailable". History shows only payment-currency amounts, plus earlier "10 null" and negative entries. Closed the browser.
+8. **Which amount the balance check uses.** 2100 EUR from acct 4 (headroom 1982.70 USD) was REJECTED, which rules out a check on the reversed-rate amount. 1900 EUR was COMPLETED with a 1767 USD debit, which rules out a check on the correct conversion (2052). Conclusion: the check appears to use the raw amount. Also: 9500 GBP from acct 1 was REJECTED for insufficient funds (fraud probe inconclusive), and a 5 EUR payment to NL99BLOCKED0000000 was REJECTED by fraud (correct).
+9. **Stopped at about 11:25** with evidence sufficient for the main findings, then wrote the report.
+
+Considered but not pursued: reproducing SAVINGS < 0 (no clean SAVINGS account), stopping the currency service (not permitted), rounding and precision tests (lower priority than the limit breaches), and recipient crediting (no documented rule).

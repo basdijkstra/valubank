@@ -18,3 +18,6 @@ dist/
 
 # Logs
 *.log
+
+# Playwright MCP server output
+.playwright-mcp/

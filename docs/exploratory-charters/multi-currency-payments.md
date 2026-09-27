@@ -1,10 +1,6 @@
 # Exploratory charter: multi-currency payments
 
-**Mission:** Explore ValuBank's new multi-currency payment functionality to discover incorrect, unsafe, or surprising behaviour.
-
-Focus particularly on whether payments behave correctly when the payment currency is the same as, or different from, the source account's currency.
-
-The goal is to learn about the behaviour of the feature and provide valuable feedback, not merely to confirm the acceptance criteria.
+**Mission:** Explore ValuBank's new multi-currency payment functionality to discover incorrect, unsafe, or surprising behaviour and provide evidence that helps the team understand the feature.
 
 **Product context:**
 ValuBank customers can now select a payment currency independently of the currency of their source account.
