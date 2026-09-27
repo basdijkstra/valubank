@@ -26,7 +26,7 @@ expect from reading the documented rules independently. Also check what
 happens for a currency pair or account currency the app doesn't obviously
 support.
 
-**Time-box:** 45 minutes.
+**Time-box:** 10 minutes.
 
 **Test data notes:** Bob has a second CHECKING account in USD
 (`NL01VALU0000000004`) alongside his EUR account - useful for cross-currency
