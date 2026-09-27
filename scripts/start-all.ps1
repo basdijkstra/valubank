@@ -9,7 +9,8 @@ $services = @(
     @{ Name = "fraud-service";         Path = "$root\services\fraud-service" },
     @{ Name = "accounts-service";      Path = "$root\services\accounts-service" },
     @{ Name = "payments-service";      Path = "$root\services\payments-service" },
-    @{ Name = "currency-rate-service"; Path = "$root\services\currency-rate-service" }
+    @{ Name = "currency-rate-service"; Path = "$root\services\currency-rate-service" },
+    @{ Name = "assistant-service";     Path = "$root\services\assistant-service" }
 )
 
 foreach ($svc in $services) {
@@ -27,6 +28,7 @@ Write-Host "  Fraud Service          : http://localhost:8083"
 Write-Host "  Accounts Service       : http://localhost:8081"
 Write-Host "  Payments Service       : http://localhost:8082"
 Write-Host "  Currency Rate Service  : http://localhost:8085"
+Write-Host "  Assistant Service      : http://localhost:8086"
 Write-Host "  Frontend               : http://localhost:5173"
 Write-Host ""
 Write-Host "Close each window to stop that service."

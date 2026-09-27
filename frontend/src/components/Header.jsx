@@ -21,6 +21,7 @@ export default function Header() {
           ValuBank
         </Link>
         <nav className="app-nav">
+          <Link to="/assistant" className="app-nav-link">Assistant</Link>
           <span className="app-nav-greeting">Hi, {session.fullName}</span>
           <button type="button" className="btn btn-secondary" onClick={handleLogout}>
             Log out

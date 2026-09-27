@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AccountDetail from './pages/AccountDetail'
 import AdminDashboard from './pages/AdminDashboard'
+import Assistant from './pages/Assistant'
 
 export default function App() {
   return (
@@ -35,6 +36,14 @@ export default function App() {
             element={
               <RequireAuth adminOnly>
                 <AdminDashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/assistant"
+            element={
+              <RequireAuth>
+                <Assistant />
               </RequireAuth>
             }
           />

@@ -12,7 +12,8 @@ valubank/
 │   ├── payments-service/         Owns payments/transfers
 │   ├── fraud-service/            Simple rule-based fraud checks (no DB)
 │   ├── interest-rate-service/    Interest-rate configuration store
-│   └── currency-rate-service/    Fixed exchange rate lookups (no DB)
+│   ├── currency-rate-service/    Fixed exchange rate lookups (no DB)
+│   └── assistant-service/        Conversational assistant over accounts/payments (no DB)
 └── scripts/
     ├── start-all.ps1             Start everything (Windows / PowerShell)
     ├── start-all.sh              Start everything (bash)
@@ -41,6 +42,11 @@ valubank/
       │ Config Service    │ │ Service          │ │  :8083         │
       │ :8084             │ │ :8085            │ └────────────────┘
       └───────────────────┘ └──────────────────┘
+
+                        ┌─────────────────┐
+                        │ Assistant       │  :8086
+                        │ Service         │  calls Accounts + Payments
+                        └─────────────────┘  Services on the model's behalf
 ```
 
 Each backend service owns its own database (H2, in-memory) — no service
@@ -60,6 +66,10 @@ OpenAPI spec, or a shared schema).
 - JDK 21+ (services target Java 21 bytecode; any newer JDK, e.g. 21-25, runs it fine)
 - Maven 3.9+ (`mvn` on your PATH)
 - Node.js 18+ and npm
+- An Anthropic API key, for the Assistant Service — set it as the `ANTHROPIC_API_KEY`
+  environment variable before starting `assistant-service` (see its
+  `application.yml`). Without it, every other service works fine; only the
+  Assistant feature will return an error.
 
 ## Running everything at once
 
@@ -87,6 +97,7 @@ Once running:
 | Fraud Service          | http://localhost:8083  |
 | Interest Rate Service  | http://localhost:8084  |
 | Currency Rate Service  | http://localhost:8085  |
+| Assistant Service      | http://localhost:8086  |
 
 Start order matters a little in practice (Accounts Service calls Interest
 Rate Service and Currency Rate Service; Payments Service calls Accounts
@@ -118,12 +129,15 @@ mvn spring-boot:run
 ```
 
 Same pattern for `payments-service`, `fraud-service`, `interest-rate-service`,
-and `currency-rate-service`. Each has its own `application.yml` with its port
-already set; the DB-backed services (Accounts, Payments, Interest Rate) seed
-their own H2 in-memory database on startup — no shared setup required. Fraud
-Service and Currency Rate Service have no database at all — both serve fixed,
-in-memory data. H2 web consoles are available at `/h2-console` on each
-DB-owning service while it's running.
+`currency-rate-service`, and `assistant-service`. Each has its own
+`application.yml` with its port already set; the DB-backed services (Accounts,
+Payments, Interest Rate) seed their own H2 in-memory database on startup — no
+shared setup required. Fraud Service, Currency Rate Service, and Assistant
+Service have no database at all. H2 web consoles are available at
+`/h2-console` on each DB-owning service while it's running.
+
+`assistant-service` additionally needs `ANTHROPIC_API_KEY` set in its
+environment before you start it — see Prerequisites above.
 
 The frontend runs independently too:
 
@@ -216,6 +230,18 @@ No seed data — the Payments DB starts empty and fills up as you use the app.
 Try a payment over 10,000, or to `NL99BLOCKED0000000`, to see a rejection;
 try stopping the Accounts Service mid-demo to see a `FAILED` payment and the
 frontend's error handling.
+
+## Assistant (conversational, AI-powered)
+
+Logged-in customers can ask the Assistant page free-form questions about
+their own accounts and payments (e.g. "What's my balance?", "Show my recent
+payments"). The Assistant Service (`:8086`) sends the conversation to Claude
+(`claude-haiku-4-5-20251001`), which uses tool calls to look up real data via
+the Accounts Service and Payments Service, then answers based on the results.
+
+There is no conversation history on the server — the frontend resends the
+full message history with each request. Requires `ANTHROPIC_API_KEY` (see
+Prerequisites).
 
 ## Adding interest to an account
 
