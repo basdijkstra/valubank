@@ -1,0 +1,65 @@
+- generic [ref=e2]:
+  - banner [ref=e22]:
+    - generic [ref=e23]:
+      - link "ValuBank" [ref=e24] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e25]:
+        - generic [ref=e26]: Hi, Bob de Vries
+        - button "Log out" [ref=e27] [cursor=pointer]
+  - main [ref=e3]:
+    - generic [ref=e46]:
+      - link "← Back to accounts" [ref=e47] [cursor=pointer]:
+        - /url: /
+      - heading "Account detail" [level=1] [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - generic [ref=e51]: IBAN
+          - generic [ref=e52]: NL01VALU0000000004
+        - generic [ref=e53]:
+          - generic [ref=e54]: Type
+          - generic [ref=e55]: CHECKING
+        - generic [ref=e56]:
+          - generic [ref=e57]: Balance
+          - generic [ref=e58]: $657.00
+        - generic [ref=e59]:
+          - generic [ref=e60]: Currency
+          - generic [ref=e61]: USD
+        - generic [ref=e62]:
+          - generic [ref=e63]: Interest rate
+          - generic [ref=e64]: 0.1%
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - heading "Make a payment" [level=2] [ref=e67]
+          - strong [ref=e89]: COMPLETED
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]: Destination IBAN
+              - textbox "Destination IBAN" [ref=e71]
+            - generic [ref=e72]:
+              - generic [ref=e73]: Destination name
+              - textbox "Destination name" [ref=e74]
+            - generic [ref=e75]:
+              - generic [ref=e76]: Amount
+              - spinbutton "Amount" [ref=e77]
+            - generic [ref=e78]:
+              - generic [ref=e79]: Currency
+              - combobox "Currency" [ref=e80]:
+                - option "EUR"
+                - option "USD" [selected]
+                - option "GBP"
+            - generic [ref=e81]:
+              - generic [ref=e82]: Description
+              - textbox "Description" [ref=e83]
+            - button "Send payment" [ref=e84] [cursor=pointer]
+        - generic [ref=e85]:
+          - heading "Payment history" [level=2] [ref=e86]
+          - list [ref=e90]:
+            - listitem [ref=e91]:
+              - generic [ref=e92]:
+                - generic [ref=e93]: Alice Janssen
+                - generic [ref=e94]: COMPLETED
+              - generic [ref=e95]:
+                - generic [ref=e96]: NL01VALU0000000001
+                - generic [ref=e97]: €100.00
+              - generic [ref=e98]: EUR from USD acct
+              - generic [ref=e99]: 9/27/2026, 11:04:57 AM

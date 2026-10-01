@@ -64,6 +64,16 @@ a {
   gap: 1rem;
 }
 
+.app-nav-link {
+  color: #fff;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.app-nav-link:hover {
+  text-decoration: underline;
+}
+
 .app-nav-greeting {
   font-size: 0.95rem;
 }
@@ -152,7 +162,17 @@ a {
   background-color: var(--color-surface);
 }
 
-.form-field input:focus {
+.form-field select {
+  font-size: 1rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+
+.form-field input:focus,
+.form-field select:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
 }
@@ -202,6 +222,26 @@ a {
 
 .btn-secondary:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--color-bg);
+}
+
+.btn-small {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.75rem;
 }
 
 /* Banners */
@@ -388,6 +428,21 @@ a {
 .payment-status-completed {
   background-color: var(--color-success-bg);
   color: var(--color-success-text);
+}
+
+.payment-status-scheduled {
+  background-color: #e7f0fd;
+  color: var(--color-primary-dark);
+}
+
+.payment-status-executed {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.payment-status-cancelled {
+  background-color: var(--color-bg);
+  color: var(--color-text-muted);
 }
 
 .payment-status-rejected,

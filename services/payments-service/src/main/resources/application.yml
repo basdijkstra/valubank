@@ -27,3 +27,13 @@ valubank:
     url: http://localhost:8081
   fraud-service:
     url: http://localhost:8083
+  # How often to look for scheduled payments that have become due (Spring cron:
+  # sec min hour day month weekday). Execution dates are whole days, so this
+  # just needs to run reasonably often.
+  scheduled-payments:
+    cron: "0 */5 * * * *"
+  # TEST-ONLY: exposes POST /api/test-support/scheduled-payments/{id}/execute,
+  # which executes a scheduled payment immediately instead of on its date.
+  # On by default so workshop participants can use it; turn off for anything real.
+  test-support:
+    enabled: true

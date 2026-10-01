@@ -33,3 +33,25 @@ export async function getPaymentsForAccount(accountId) {
   const response = await fetch(`${BASE_URL}/api/accounts/${accountId}/payments`)
   return handleResponse(response)
 }
+
+export async function schedulePayment(scheduledPayment) {
+  const response = await fetch(`${BASE_URL}/api/scheduled-payments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(scheduledPayment)
+  })
+  return handleResponse(response)
+}
+
+export async function getScheduledPaymentsForCustomer(customerId) {
+  const response = await fetch(`${BASE_URL}/api/customers/${customerId}/scheduled-payments`)
+  return handleResponse(response)
+}
+
+export async function cancelScheduledPayment(scheduledPaymentId, customerId) {
+  const response = await fetch(
+    `${BASE_URL}/api/scheduled-payments/${scheduledPaymentId}/cancel?customerId=${customerId}`,
+    { method: 'POST' }
+  )
+  return handleResponse(response)
+}

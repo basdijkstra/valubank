@@ -19,4 +19,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                 .body(new ErrorResponse("Could not verify source account"));
     }
+
+    @ExceptionHandler(InvalidScheduledPaymentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidScheduledPayment(InvalidScheduledPaymentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(AccountNotOwnedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotOwned(AccountNotOwnedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(ScheduledPaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleScheduledPaymentNotFound(ScheduledPaymentNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(ScheduledPaymentStateException.class)
+    public ResponseEntity<ErrorResponse> handleScheduledPaymentState(ScheduledPaymentStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(e.getMessage()));
+    }
 }

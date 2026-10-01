@@ -21,6 +21,11 @@ export default function Header() {
           ValuBank
         </Link>
         <nav className="app-nav">
+          {!session.admin && (
+            <Link to="/scheduled-payments" className="app-nav-link">
+              Scheduled payments
+            </Link>
+          )}
           <span className="app-nav-greeting">Hi, {session.fullName}</span>
           <button type="button" className="btn btn-secondary" onClick={handleLogout}>
             Log out
