@@ -189,6 +189,10 @@ export default function AccountDetail() {
       <div className="detail-columns">
         <section className="card">
           <h2>Make a payment</h2>
+          <p className="status-text">
+            Want to pay later?{' '}
+            <Link to={`/scheduled-payments?accountId=${accountId}`}>Schedule a payment</Link>
+          </p>
 
           {lastPaymentResult && (
             <div

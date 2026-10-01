@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import AccountDetail from './pages/AccountDetail'
 import AdminDashboard from './pages/AdminDashboard'
+import ScheduledPayments from './pages/ScheduledPayments'
 
 export default function App() {
   return (
@@ -27,6 +28,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <AccountDetail />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/scheduled-payments"
+            element={
+              <RequireAuth>
+                <ScheduledPayments />
               </RequireAuth>
             }
           />

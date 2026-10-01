@@ -198,6 +198,52 @@ Try a payment over 10,000, or to `NL99BLOCKED0000000`, to see a rejection;
 try stopping the Accounts Service mid-demo to see a `FAILED` payment and the
 frontend's error handling.
 
+## Scheduled payments
+
+Customers can schedule a payment for a future date via **Scheduled payments**
+in the header (or "Schedule a payment" on an account's detail page): pick a
+source account, enter the beneficiary IBAN/name, amount and execution date,
+review, and confirm. The same page lists the customer's scheduled payments
+and lets them cancel any that are still `SCHEDULED`.
+
+Rules (Payments Service):
+
+- The execution date must be in the future (tomorrow or later), the amount
+  must be greater than zero, and the beneficiary IBAN must be well-formed
+  (`400` otherwise).
+- The source account must belong to the customer (`403` otherwise). The
+  payment is always in the source account's currency.
+- A scheduled payment is executed **once**, on its execution date, by
+  handing it to the normal payment flow above, so the fraud check and
+  funds/overdraft rules apply at execution time and the result appears in
+  the account's payment history. The scheduled payment then becomes
+  `EXECUTED`, or `FAILED` with the reason (e.g. "Insufficient funds").
+- Only a `SCHEDULED` payment can be cancelled (`CANCELLED`); cancelling or
+  executing one that is already executed/failed/cancelled returns `409`.
+
+A background job (`valubank.scheduled-payments.cron`, every 5 minutes by
+default, plus once on startup) executes everything due today or earlier.
+
+| Method | Path | |
+|--------|------|-|
+| `POST` | `/api/scheduled-payments` | Body: `customerId`, `fromAccountId`, `toAccountIban`, `toAccountName`, `amount`, `executionDate` (`YYYY-MM-DD`), `description` |
+| `GET`  | `/api/customers/{customerId}/scheduled-payments` | List a customer's scheduled payments |
+| `POST` | `/api/scheduled-payments/{id}/cancel?customerId={customerId}` | Cancel |
+
+### Test-only: execute a scheduled payment now
+
+So nobody has to wait for the execution date:
+
+```bash
+curl -X POST http://localhost:8082/api/test-support/scheduled-payments/{id}/execute
+```
+
+This executes the payment immediately, ignoring its date, with exactly the
+same rules and outcomes as the scheduled run. It is only available while
+`valubank.test-support.enabled=true` in the Payments Service's
+`application.yml` (on by default for the workshop; a real deployment would
+turn it off).
+
 ## Adding interest to an account
 
 `PUT /api/accounts/{accountId}/interest` on the Accounts Service calculates

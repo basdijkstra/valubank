@@ -1,0 +1,29 @@
+- generic [ref=e2]:
+  - banner [ref=e22]:
+    - generic [ref=e23]:
+      - link "ValuBank" [ref=e24] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e25]:
+        - generic [ref=e26]: Hi, Bob de Vries
+        - button "Log out" [ref=e27] [cursor=pointer]
+  - main [ref=e3]:
+    - generic [ref=e28]:
+      - heading "Your accounts" [level=1] [ref=e29]
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e32]: Total (EUR)
+          - generic [ref=e33]: €500.00
+        - generic [ref=e34]:
+          - generic [ref=e35]: Total (USD)
+          - generic [ref=e36]: $750.00
+      - generic [ref=e37]:
+        - link "CHECKING NL01VALU0000000003 €500.00" [ref=e38] [cursor=pointer]:
+          - /url: /accounts/3
+          - generic [ref=e39]: CHECKING
+          - generic [ref=e40]: NL01VALU0000000003
+          - generic [ref=e41]: €500.00
+        - link "CHECKING NL01VALU0000000004 $750.00" [ref=e42] [cursor=pointer]:
+          - /url: /accounts/4
+          - generic [ref=e43]: CHECKING
+          - generic [ref=e44]: NL01VALU0000000004
+          - generic [ref=e45]: $750.00
