@@ -1,11 +1,13 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 
 export class AccountsOverviewPage {
 
     private readonly page: Page;
+    readonly textLabelGreeting: Locator;
 
     constructor(page: Page) {
         this.page = page;
+        this.textLabelGreeting = this.page.locator('.app-nav-greeting');
     }
 
     async getAccountBalance(iban: string): Promise<string> {
