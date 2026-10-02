@@ -12,6 +12,7 @@ import { defineConfig, devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  timeout: 10 * 1000,
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -37,6 +38,17 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: /scheduled-payment-balances\.spec\.ts/,
+    },
+
+    /* Tests that set and assert account balances. They share accounts with each other and with
+       the tests above, so they run one at a time, after the 'chromium' project has finished. */
+    {
+      name: 'scheduled-payments-balances',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /scheduled-payment-balances\.spec\.ts/,
+      fullyParallel: false,
+      dependencies: ['chromium'],
     },
 
     // {

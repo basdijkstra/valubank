@@ -1,11 +1,13 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 
 export class AdminPage {
 
     private readonly page: Page;
+    readonly scheduledPaymentsLinkLocator: Locator;
 
     constructor(page: Page) {
         this.page = page;
+        this.scheduledPaymentsLinkLocator = this.page.getByRole('link', { name: 'Scheduled payments' });
     }
     
     async addInterestToAccount(iban: string) {

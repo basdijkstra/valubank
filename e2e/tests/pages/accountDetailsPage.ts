@@ -5,11 +5,13 @@ export class AccountDetailsPage {
     private readonly page: Page;
     readonly errorMessageLocator;
     readonly ibanValidationErrorLocator;
+    readonly balanceLocator;
 
     constructor(page: Page) {
         this.page = page;
         this.errorMessageLocator = this.page.locator('xpath=//div[contains(@class, "banner-error")]');
         this.ibanValidationErrorLocator = this.page.locator('#payment-to-iban + .field-error');
+        this.balanceLocator = this.page.locator('.account-summary-balance');
     }
 
     async makePayment(recipientIban: string, recipientName: string, amount: string, description: string) {
@@ -18,5 +20,9 @@ export class AccountDetailsPage {
         await this.page.getByLabel('Amount').fill(amount);
         await this.page.getByLabel('Description').fill(description);
         await this.page.getByRole('button', { name: 'Send payment' }).click();
+    }
+
+    async gotoScheduledPayments() {
+        await this.page.getByRole('link', { name: 'Schedule a payment' }).click();
     }
 }

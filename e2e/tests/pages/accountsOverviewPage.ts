@@ -20,6 +20,10 @@ export class AccountsOverviewPage {
         await this.page.locator(`xpath=//div[@class='account-card-iban' and text()='${iban}']`).click();
     }
 
+    async gotoScheduledPayments() {
+        await this.page.getByRole('link', { name: 'Scheduled payments' }).click();
+    }
+
     async logout() {
         await this.page.getByRole('button', { name: 'Log out' }).click();
     }
