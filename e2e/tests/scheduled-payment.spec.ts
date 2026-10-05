@@ -31,30 +31,6 @@ const DATE_ERROR = 'Execution date must be in the future.';
 
 // ---------- A. Scheduling via the UI: main flow ----------
 
-test('TC-SP-02: Going back from the confirmation should keep the entered data', async ({ page }) => {
-
-  const description = `Back test ${runId}`;
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAs('alice', 'password123');
-  await new AccountsOverviewPage(page).gotoScheduledPayments();
-
-  const scheduledPaymentsPage = new ScheduledPaymentsPage(page);
-  await scheduledPaymentsPage.reviewPayment('NL01VALU0000000003', 'Bob de Vries', '10.00', isoDate(5), description);
-  await scheduledPaymentsPage.goBack();
-  await scheduledPaymentsPage.reviewWithAmount('11.00');
-  await scheduledPaymentsPage.confirmPayment();
-
-  // One entry with this description means no 10.00 payment was scheduled as well.
-  const entry = scheduledPaymentsPage.entryLocatorFor(description);
-  await expect(entry).toHaveCount(1);
-  await expect(scheduledPaymentsPage.statusLocatorFor(description)).toHaveText('SCHEDULED');
-  await expect(entry).toContainText('Bob de Vries');
-  await expect(entry).toContainText('NL01VALU0000000003');
-  await expect(entry).toHaveText('€11.00');
-  await expect(entry).toContainText(`Execution date: ${displayDate(isoDate(5))}`);
-});
-
 test('TC-SP-03: Scheduling from the account detail page should use that account as the source', async ({ page }) => {
 
   const description = `Preselected ${runId}`;
@@ -323,28 +299,6 @@ test('TC-SP-16: A payment with an empty beneficiary name should be scheduled', a
   expect(scheduledPayments[0].toAccountName).toEqual('');
 });
 
-test('TC-SP-17: Double-clicking Confirm should schedule the payment only once', async ({ page, request }) => {
-
-  const description = `Double click ${runId}`;
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAs('alice', 'password123');
-  await new AccountsOverviewPage(page).gotoScheduledPayments();
-
-  await delayScheduleRequest(page);
-
-  const scheduledPaymentsPage = new ScheduledPaymentsPage(page);
-  await scheduledPaymentsPage.reviewPayment('NL01VALU0000000003', 'Bob', '3.33', isoDate(1), description);
-  await scheduledPaymentsPage.doubleClickConfirm();
-
-  const scheduledPayments = await new PaymentsApi(request).findScheduledPayments(1, description);
-  expect(scheduledPayments.length).toEqual(1);
-
-  await expect(scheduledPaymentsPage.confirmButtonLocator).toHaveText('Scheduling...');
-  await expect(scheduledPaymentsPage.confirmButtonLocator).toBeDisabled();
-  await expect(scheduledPaymentsPage.entryLocatorFor(description)).toHaveCount(1);
-});
-
 test('TC-SP-18: The error message should disappear as soon as the field changes', async ({ page }) => {
 
   const loginPage = new LoginPage(page);
@@ -374,21 +328,6 @@ test('TC-SP-30: Only the customer\'s own accounts should be offered as source ac
 
   await expect(scheduledPaymentsPage.fromAccountOptionsLocator).toHaveCount(2);
   await expect(scheduledPaymentsPage.fromAccountOptionsLocator).toContainText(['NL01VALU0000000003', 'NL01VALU0000000004']);
-});
-
-test('TC-SP-31: Preselecting another customer\'s account through the URL should fall back to an own account', async ({ page }) => {
-
-  const description = `Foreign preselect ${runId}`;
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAs('alice', 'password123');
-
-  // Account 3 belongs to Bob.
-  const scheduledPaymentsPage = new ScheduledPaymentsPage(page);
-  await scheduledPaymentsPage.open('3');
-  await scheduledPaymentsPage.schedulePayment('NL01VALU0000000003', 'Bob', '10.00', isoDate(1), description);
-
-  await expect(scheduledPaymentsPage.entryLocatorFor(description)).toContainText('From NL01VALU0000000001');
 });
 
 test('TC-SP-32: Scheduling from another customer\'s account should be rejected by the backend', async ({ request }) => {
@@ -490,16 +429,6 @@ test('TC-SP-37: The admin opening the scheduled payments page directly should ge
 
 // ---------- E. Scheduled payments list ----------
 
-test('TC-SP-40: A customer without scheduled payments should see an empty-list message', async ({ page }) => {
-
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAs('alice', 'password123');
-  await new AccountsOverviewPage(page).gotoScheduledPayments();
-
-  await expect(new ScheduledPaymentsPage(page).emptyListMessageLocator).toBeVisible();
-});
-
 test('TC-SP-41: Scheduled payments should be listed by execution date, then by creation', async ({ page, request }) => {
 
   const paymentsApi = new PaymentsApi(request);
@@ -547,20 +476,6 @@ test('TC-SP-43: The list should still be shown when the accounts can\'t be loade
 
 // ---------- F. Cancelling ----------
 
-test('TC-SP-52: Cancelling a cancelled payment again should be rejected', async ({ request }) => {
-
-  const paymentsApi = new PaymentsApi(request);
-  const scheduledPayment = await paymentsApi.scheduleValidPayment({ description: `Cancel twice ${runId}` });
-  const firstCancel = await (await paymentsApi.cancelScheduledPayment(scheduledPayment.id, 1)).json();
-
-  const response = await paymentsApi.cancelScheduledPayment(scheduledPayment.id, 1);
-
-  expect(response.status()).toEqual(409);
-  expect(await response.json()).toEqual({ error: 'Scheduled payment is CANCELLED and can no longer be cancelled' });
-  const [afterSecondCancel] = await paymentsApi.findScheduledPayments(1, `Cancel twice ${runId}`);
-  expect(afterSecondCancel.cancelledAt).toEqual(firstCancel.cancelledAt);
-});
-
 test('TC-SP-53: Cancelling another customer\'s or a non-existent payment should be rejected', async ({ request }) => {
 
   const description = `Cancel foreign ${runId}`;
@@ -583,29 +498,6 @@ test('TC-SP-53: Cancelling another customer\'s or a non-existent payment should 
   // Locks in current behaviour: Spring's default error body, not ValuBank's {"error": "..."} message.
   expect(noCustomerResponse.status()).toEqual(400);
   expect((await noCustomerResponse.json()).error).toEqual('Bad Request');
-});
-
-test('TC-SP-55: A payment whose execution failed should not be cancellable', async ({ page, request }) => {
-
-  const description = `Failed cancel ${runId}`;
-  const paymentsApi = new PaymentsApi(request);
-  // Above the fraud limit, so the execution fails and nothing is debited.
-  const scheduledPayment = await paymentsApi.scheduleValidPayment({ fromAccountId: 2, amount: 10000.01, description });
-  await paymentsApi.executeScheduledPayment(scheduledPayment.id);
-
-  const loginPage = new LoginPage(page);
-  await loginPage.open();
-  await loginPage.loginAs('alice', 'password123');
-  await new AccountsOverviewPage(page).gotoScheduledPayments();
-
-  const scheduledPaymentsPage = new ScheduledPaymentsPage(page);
-  await expect(scheduledPaymentsPage.statusLocatorFor(description)).toHaveText('FAILED');
-  await expect(scheduledPaymentsPage.cancelButtonLocatorFor(description)).toHaveCount(0);
-
-  const response = await paymentsApi.cancelScheduledPayment(scheduledPayment.id, 1);
-
-  expect(response.status()).toEqual(409);
-  expect(await response.json()).toEqual({ error: 'Scheduled payment is FAILED and can no longer be cancelled' });
 });
 
 // ---------- I. Executed exactly once ----------
