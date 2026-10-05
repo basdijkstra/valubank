@@ -31,6 +31,30 @@ const DATE_ERROR = 'Execution date must be in the future.';
 
 // ---------- A. Scheduling via the UI: main flow ----------
 
+test('TC-SP-02: Going back from the confirmation should keep the entered data', async ({ page }) => {
+
+  const description = `Back test ${runId}`;
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAs('alice', 'password123');
+  await new AccountsOverviewPage(page).gotoScheduledPayments();
+
+  const scheduledPaymentsPage = new ScheduledPaymentsPage(page);
+  await scheduledPaymentsPage.reviewPayment('NL01VALU0000000003', 'Bob de Vries', '10.00', isoDate(5), description);
+  await scheduledPaymentsPage.goBack();
+  await scheduledPaymentsPage.reviewWithAmount('11.00');
+  await scheduledPaymentsPage.confirmPayment();
+
+  // One entry with this description means no 10.00 payment was scheduled as well.
+  const entry = scheduledPaymentsPage.entryLocatorFor(description);
+  await expect(entry).toHaveCount(1);
+  await expect(scheduledPaymentsPage.statusLocatorFor(description)).toHaveText('SCHEDULED');
+  await expect(entry).toContainText('Bob de Vries');
+  await expect(entry).toContainText('NL01VALU0000000003');
+  await expect(entry).toHaveText('€11.00');
+  await expect(entry).toContainText(`Execution date: ${displayDate(isoDate(5))}`);
+});
+
 test('TC-SP-03: Scheduling from the account detail page should use that account as the source', async ({ page }) => {
 
   const description = `Preselected ${runId}`;
