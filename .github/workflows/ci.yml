@@ -133,6 +133,7 @@ jobs:
     env:
       # Empty for pull requests from forks, which don't receive secrets.
       HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+      CLAUDE_CODE_VERSION: 2.1.291
 
     steps:
       - name: Checkout repository
@@ -153,12 +154,18 @@ jobs:
         id: collect
         run: node .github/scripts/collect-e2e-failures.mjs artifacts failure-analysis
 
+      # Pinned, so a CLI release can't change the analysis between builds. The version
+      # check shows which claude binary the next step actually runs.
       - name: Install Claude Code
         if: ${{ steps.collect.outputs.needs_analysis == 'true' && env.HAS_ANTHROPIC_KEY == 'true' }}
-        run: npm install -g @anthropic-ai/claude-code
+        run: |
+          npm install -g @anthropic-ai/claude-code@${{ env.CLAUDE_CODE_VERSION }}
+          which -a claude
+          claude --version
 
-      # Read-only: no Bash, no web access, no file writes. The report is rendered from the
-      # structured output by the next step.
+      # Read-only: --tools makes only Read, Grep and Glob available, so no Bash, no web
+      # access and no file writes. The report is rendered from the structured output by
+      # the next step.
       - name: Analyze failures with Claude
         id: analyze
         if: ${{ steps.collect.outputs.needs_analysis == 'true' && env.HAS_ANTHROPIC_KEY == 'true' }}
@@ -166,7 +173,13 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          claude -p "$(cat .github/prompts/analyze-e2e-failures.md)"             --model claude-opus-5-5             --restricted             --tools "Read,Grep,Glob"             --json-schema "$(cat .github/prompts/e2e-findings.schema.json)"             --output-format json             --max-budget-usd 5             > failure-analysis/claude-output.json
+          claude -p "$(cat .github/prompts/analyze-e2e-failures.md)" \
+            --model claude-opus-5-5 \
+            --tools "Read,Grep,Glob" \
+            --json-schema "$(cat .github/prompts/e2e-findings.schema.json)" \
+            --output-format json \
+            --max-budget-usd 5 \
+            > failure-analysis/claude-output.json
 
       - name: Write analysis report
         if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
