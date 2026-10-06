@@ -84,6 +84,7 @@ jobs:
           disown
 
       - name: Wait for services to be live
+        id: wait-for-services
         run: |
           for port in $PORTS; do
             echo "Waiting for localhost:$port..."
@@ -100,6 +101,84 @@ jobs:
             echo "::endgroup::"
           done
 
+      # Runs even when backend tests failed, so every build has E2E results to analyze.
+      # Skipped only when the services never came up.
       - name: Run E2E tests (Playwright)
+        if: ${{ !cancelled() && steps.wait-for-services.outcome == 'success' }}
         working-directory: e2e
         run: npx playwright test
+
+      # One artifact per JDK version, so analyze-e2e-failures can compare them.
+      - name: Upload E2E results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-jdk${{ matrix.java-version }}
+          path: |
+            e2e/results/
+            e2e/test-results/
+            e2e/playwright-report/
+            logs/
+          if-no-files-found: ignore
+
+  # Analyzes failed and flaky Playwright tests with Claude, across all JDK versions at once.
+  # Advisory only: it never changes the result of build-and-test.
+  analyze-e2e-failures:
+    needs: build-and-test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      # Empty for pull requests from forks, which don't receive secrets.
+      HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Download E2E results of all JDK versions
+        uses: actions/download-artifact@v4
+        with:
+          pattern: e2e-results-jdk*
+          path: artifacts
+
+      - name: Collect failed and flaky tests
+        id: collect
+        run: node .github/scripts/collect-e2e-failures.mjs artifacts failure-analysis
+
+      - name: Install Claude Code
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' && env.HAS_ANTHROPIC_KEY == 'true' }}
+        run: npm install -g @anthropic-ai/claude-code
+
+      # Read-only: no Bash, no web access, no file writes. The report is rendered from the
+      # structured output by the next step.
+      - name: Analyze failures with Claude
+        id: analyze
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' && env.HAS_ANTHROPIC_KEY == 'true' }}
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude -p "$(cat .github/prompts/analyze-e2e-failures.md)"             --model claude-opus-5-5             --restricted             --tools "Read,Grep,Glob"             --json-schema "$(cat .github/prompts/e2e-findings.schema.json)"             --output-format json             --max-budget-usd 5             > failure-analysis/claude-output.json
+
+      - name: Write analysis report
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
+        env:
+          ANALYSIS_OUTCOME: ${{ steps.analyze.outcome }}
+        run: node .github/scripts/render-e2e-analysis.mjs failure-analysis
+
+      - name: Publish analysis report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure-analysis
+          path: failure-analysis/
+          retention-days: 90
+          if-no-files-found: ignore

@@ -260,3 +260,23 @@ The admin frontend view (log in as `admin`) lists every account with its
 owner and balance, lets you select one or more via checkbox, and calls this
 endpoint once per selected account when you press "Add interest to
 selected".
+
+## CI: E2E failure analysis
+
+CI runs the Playwright suite once per JDK version (21 to 26). After all of them
+have finished, the `analyze-e2e-failures` job collects the failed and flaky tests
+of every JDK version and has Claude analyse them (read-only access to the
+repository and the test results). For each test it gives a verdict (test
+problem, application problem, environment, flaky or inconclusive), the evidence
+behind it and a suggested fix, which is never applied.
+
+The report is published as the build artifact **`e2e-failure-analysis`**
+(`report.md`, `findings.json`, and the input `failures.json`), and also shown on
+the run's summary page. It includes a table with the outcome of each failing
+test per JDK version, so differences between JDK versions stand out. The raw
+results per JDK version are in the artifacts `e2e-results-jdk<N>`.
+
+The analysis is advisory: it never changes the build result. It needs the
+repository secret `ANTHROPIC_API_KEY`; without it (for example, for a pull
+request from a fork) the report contains only the results tables. The prompt
+and the output schema are in `.github/prompts/`.

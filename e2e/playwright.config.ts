@@ -23,7 +23,11 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  /* The JSON report feeds the E2E failure analysis in CI (.github/scripts/collect-e2e-failures.mjs). */
+  reporter: [
+    ['html'],
+    ['json', { outputFile: 'results/results.json' }]
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */

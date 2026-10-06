@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "findings"],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Two to five sentences: the overall picture, including patterns across tests and differences between JDK versions."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["testId", "verdict", "confidence", "explanation", "jdkDifference", "evidence", "suggestedFix"],
+        "properties": {
+          "testId": {
+            "type": "string",
+            "description": "The id from failures.json (T1, T2, ...), or JDK<N> for a JDK version without E2E results."
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["test-problem", "application-problem", "environment", "flaky", "inconclusive"]
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "explanation": {
+            "type": "string",
+            "description": "The root cause and the reasoning that leads to the verdict."
+          },
+          "jdkDifference": {
+            "type": "string",
+            "description": "Whether the outcome differs between JDK versions and what that tells about the cause."
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["location", "detail"],
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "A repository path with line number (path:line), or an artifact path."
+                },
+                "detail": {
+                  "type": "string",
+                  "description": "What this location shows, quoted where possible."
+                }
+              }
+            }
+          },
+          "suggestedFix": {
+            "type": "string",
+            "description": "The change that would fix the root cause. Described only, never applied."
+          }
+        }
+      }
+    }
+  }
+}
