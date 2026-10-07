@@ -280,3 +280,12 @@ The analysis is advisory: it never changes the build result. It needs the
 repository secret `ANTHROPIC_API_KEY`; without it (for example, for a pull
 request from a fork) the report contains only the results tables. The prompt
 and the output schema are in `.github/prompts/`.
+
+Claude does not get the repository or the raw results. It works in a separate
+directory with only the files the analysis needs, in which sensitive values are
+replaced by placeholders such as `<IBAN_1 len=15>` (the seeded accounts and logins
+stay visible). A secret scanner must pass before anything is sent, and again before
+the report is published; if it finds something, the analysis is skipped and the job
+fails. `manifest.json` in the report lists every file Claude could read. Raw results
+are kept for 14 days, the report for 90. See
+[`docs/llm-data-policy.md`](docs/llm-data-policy.md) for what is (not) sent and why.

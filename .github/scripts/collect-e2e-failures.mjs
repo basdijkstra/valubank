@@ -1,6 +1,7 @@
 // Collects failed and flaky Playwright tests from the E2E results of every JDK version
 // (artifacts e2e-results-jdk<N>, downloaded into one directory) and writes them to
-// <outDir>/failures.json: the input for the Claude analysis and the report.
+// <outDir>/failures.json. This raw file is not sent to the LLM or published:
+// prepare-analysis-workspace.mjs derives a redacted copy from it.
 //
 // Usage: node collect-e2e-failures.mjs <artifactsDir> <outDir>
 // Sets the step output needs_analysis=true when there is anything to analyze.
@@ -65,6 +66,8 @@ function failureDetails(leg, test) {
     attempts: (test.results ?? []).map((result) => ({
       retry: result.retry,
       status: result.status,
+      // Used to cut the matching window out of the service logs.
+      startTime: result.startTime,
       durationMs: result.duration,
       error: (result.errors ?? []).length > 0
         ? truncate(stripAnsi(result.errors.map((error) => error.message ?? error.value ?? '').join('\n')))

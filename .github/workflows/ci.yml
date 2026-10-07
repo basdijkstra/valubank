@@ -108,7 +108,8 @@ jobs:
         working-directory: e2e
         run: npx playwright test
 
-      # One artifact per JDK version, so analyze-e2e-failures can compare them.
+      # One artifact per JDK version, so analyze-e2e-failures can compare them. These are
+      # raw results (traces contain network data), so they are kept for a short time only.
       - name: Upload E2E results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
@@ -119,10 +120,15 @@ jobs:
             e2e/test-results/
             e2e/playwright-report/
             logs/
+          retention-days: 14
           if-no-files-found: ignore
 
   # Analyzes failed and flaky Playwright tests with Claude, across all JDK versions at once.
   # Advisory only: it never changes the result of build-and-test.
+  #
+  # What the LLM may see is controlled step by step (docs/llm-data-policy.md):
+  # an allowlisted, pseudonymized workspace outside the checkout, a secret scan that must
+  # pass before anything is sent, and a second scan before the report is published.
   analyze-e2e-failures:
     needs: build-and-test
     if: ${{ !cancelled() }}
@@ -134,15 +140,24 @@ jobs:
       # Empty for pull requests from forks, which don't receive secrets.
       HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
       CLAUDE_CODE_VERSION: 2.1.291
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
 
     steps:
+      # No GITHUB_TOKEN left behind in .git/config.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # The redaction is a safeguard, so it is tested like any other code, every run.
+      - name: Test the redaction rules
+        run: node --test .github/scripts/redact.test.mjs
 
       - name: Download E2E results of all JDK versions
         uses: actions/download-artifact@v4
@@ -150,48 +165,113 @@ jobs:
           pattern: e2e-results-jdk*
           path: artifacts
 
+      # Raw, unredacted: stays on the runner, never sent or published.
       - name: Collect failed and flaky tests
         id: collect
-        run: node .github/scripts/collect-e2e-failures.mjs artifacts failure-analysis
+        run: node .github/scripts/collect-e2e-failures.mjs artifacts analysis-input
+
+      - name: Prepare the analysis workspace (allowlist and redaction)
+        id: prepare
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
+        run: node .github/scripts/prepare-analysis-workspace.mjs analysis-input/failures.json . "$RUNNER_TEMP/analysis-workspace" failure-analysis
+
+      # Pinned and checksum-verified: the scanner is part of the safeguard.
+      - name: Install the secret scanner
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin"
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/bin" gitleaks
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      # Proves the scanner works before we rely on it: a planted fake secret must be found.
+      - name: Check that the secret scanner finds a planted secret
+        id: canary
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
+        run: |
+          gitleaks version
+          canary_dir=$(mktemp -d)
+          # Random and never valid, created at runtime so the repository contains no secret.
+          echo "aws_access_key_id = AKIA$(head -c 400 /dev/urandom | tr -dc 'A-Z2-7' | head -c 16)" > "$canary_dir/canary.txt"
+          if bash .github/scripts/scan-secrets.sh "$canary_dir" "$RUNNER_TEMP/canary-report.json" > /dev/null; then
+            echo "::error::The secret scanner did not find the planted canary. Nothing will be sent to the LLM."
+            exit 1
+          fi
+          echo "Canary found: the secret scanner works."
+
+      # Fail closed: any finding means nothing is sent to the LLM, and the job fails.
+      - name: Scan the analysis input for secrets
+        id: scan-input
+        if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
+        run: |
+          mkdir -p secret-scans
+          bash .github/scripts/scan-secrets.sh "$RUNNER_TEMP/analysis-workspace" secret-scans/secret-scan-input.json
 
       # Pinned, so a CLI release can't change the analysis between builds. The version
       # check shows which claude binary the next step actually runs.
       - name: Install Claude Code
-        if: ${{ steps.collect.outputs.needs_analysis == 'true' && env.HAS_ANTHROPIC_KEY == 'true' }}
+        if: ${{ steps.scan-input.outcome == 'success' && env.HAS_ANTHROPIC_KEY == 'true' }}
         run: |
           npm install -g @anthropic-ai/claude-code@${{ env.CLAUDE_CODE_VERSION }}
           which -a claude
           claude --version
 
-      # Read-only: --tools makes only Read, Grep and Glob available, so no Bash, no web
-      # access and no file writes. The report is rendered from the structured output by
-      # the next step.
+      # Runs inside the analysis workspace, so it can only read what was prepared there.
+      # Read-only: --tools makes only Read, Grep and Glob available (no Bash, no web access,
+      # no file writes), and the settings add deny rules as a second line of defence.
       - name: Analyze failures with Claude
         id: analyze
-        if: ${{ steps.collect.outputs.needs_analysis == 'true' && env.HAS_ANTHROPIC_KEY == 'true' }}
+        if: ${{ steps.scan-input.outcome == 'success' && env.HAS_ANTHROPIC_KEY == 'true' }}
         continue-on-error: true
+        working-directory: ${{ runner.temp }}/analysis-workspace
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          claude -p "$(cat .github/prompts/analyze-e2e-failures.md)" \
+          claude -p "$(cat "$GITHUB_WORKSPACE/.github/prompts/analyze-e2e-failures.md")" \
             --model claude-opus-5-5 \
             --tools "Read,Grep,Glob" \
-            --json-schema "$(cat .github/prompts/e2e-findings.schema.json)" \
+            --settings "$GITHUB_WORKSPACE/.github/claude/analysis-settings.json" \
+            --json-schema "$(cat "$GITHUB_WORKSPACE/.github/prompts/e2e-findings.schema.json")" \
             --output-format json \
             --max-budget-usd 5 \
-            > failure-analysis/claude-output.json
+            > "$GITHUB_WORKSPACE/failure-analysis/claude-output.json"
 
       - name: Write analysis report
-        if: ${{ steps.collect.outputs.needs_analysis == 'true' }}
+        id: render
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
         env:
           ANALYSIS_OUTCOME: ${{ steps.analyze.outcome }}
+          INPUT_SCAN_OUTCOME: ${{ steps.scan-input.outcome }}
         run: node .github/scripts/render-e2e-analysis.mjs failure-analysis
 
+      # The output is data too: the model could have copied something it should not have.
+      - name: Scan the report for secrets
+        id: scan-output
+        if: ${{ !cancelled() && steps.prepare.outcome == 'success' }}
+        run: |
+          mkdir -p secret-scans
+          bash .github/scripts/scan-secrets.sh failure-analysis secret-scans/secret-scan-output.json
+
+      - name: Add report to job summary
+        if: ${{ !cancelled() && steps.scan-output.outcome == 'success' }}
+        run: cat failure-analysis/report.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Publish analysis report
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.scan-output.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: e2e-failure-analysis
           path: failure-analysis/
+          retention-days: 90
+
+      # Rule ids and locations only (the scanner redacts the secrets themselves).
+      - name: Publish secret scan results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-secret-scans
+          path: secret-scans/
           retention-days: 90
           if-no-files-found: ignore
