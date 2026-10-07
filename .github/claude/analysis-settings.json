@@ -6,7 +6,12 @@
       "Read(**/.env.*)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
-      "Read(~/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/**)",
+      "Read(~/.npmrc)",
+      "Read(~/.gitconfig)",
+      "Read(~/.git-credentials)",
       "Read(//etc/**)",
       "Read(//proc/**)"
     ]

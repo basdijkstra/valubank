@@ -54,7 +54,7 @@ Fill this in before sending anything. Technical measures reduce risk; they do no
 | Step | Measure | Where |
 |---|---|---|
 | 4. Allowlist | Only listed files are copied into `$RUNNER_TEMP/analysis-workspace`; Claude runs there | `.github/scripts/prepare-analysis-workspace.mjs` |
-| 5. Secrets out of reach | `persist-credentials: false`; API key on one step; deny rules for `.git`, `.env*`, keys, home directory | `.github/workflows/ci.yml`, `.github/claude/analysis-settings.json` |
+| 5. Secrets out of reach | `persist-credentials: false`; API key on one step; deny rules for `.git`, `.env*`, keys and the credential files in the home directory (`~/.ssh`, `~/.aws`, `~/.config`, `~/.npmrc`, `~/.gitconfig`, `~/.git-credentials`) | `.github/workflows/ci.yml`, `.github/claude/analysis-settings.json` |
 | 6. Redaction | Consistent placeholders (`<IBAN_1 len=15>`, `<EMAIL_1>`, `<TOKEN_1>`, `<SECRET_1>`) in data *and* source, one mapping per run, never stored | `.github/scripts/redact.mjs` |
 | 7. Gate | gitleaks (pinned, checksum-verified) scans the workspace; any finding: nothing is sent, the job fails | `.github/scripts/scan-secrets.sh` |
 | 7. Canary | Unit tests with planted fake secrets; before each scan, a random fake key must be detected | `.github/scripts/redact.test.mjs`, the canary step in `ci.yml` |
@@ -90,6 +90,12 @@ These are deliberate discussion points, not oversights:
   not everything. That's why minimization (steps 4 and 8) comes before redaction.
 - **The deny rules in `analysis-settings.json` are defence in depth.** The main
   protection is the separate workspace: what isn't copied there can't be read.
+- **A safeguard can break the thing it protects.** The first version denied the
+  whole home directory (`~/**`). On a GitHub runner the analysis workspace is *inside*
+  the home directory (`/home/runner/work/_temp`), so every read was denied and Claude
+  returned one meaningless finding for "ALL" tests. The report validation caught it,
+  and the report now lists denied reads. Test your restrictions against the real
+  environment, not only against the threat.
 
 ## How to verify
 

@@ -45,18 +45,21 @@ function readClaudeOutput() {
     return { problems: [`Claude output is not valid JSON: ${error.message}`] };
   }
   const meta = { costUsd: output.total_cost_usd ?? null, turns: output.num_turns ?? null, durationMs: output.duration_ms ?? null };
+  // Reads blocked by the permission settings. A few (for example on .git) are expected;
+  // many mean Claude could not see its input, and its answer can't be trusted.
+  const denials = [...new Set((output.permission_denials ?? []).map((denial) => denial.tool_input?.file_path ?? denial.tool_input?.path ?? denial.tool_name))];
   if (output.is_error) {
-    return { meta, problems: [`Claude ended with an error (${output.subtype ?? 'unknown'}): ${output.result ?? ''}`] };
+    return { meta, denials, problems: [`Claude ended with an error (${output.subtype ?? 'unknown'}): ${output.result ?? ''}`] };
   }
   let analysis = output.structured_output;
   if (!analysis && typeof output.result === 'string') {
     try {
       analysis = JSON.parse(output.result);
     } catch {
-      return { meta, problems: ['Claude returned text instead of the structured analysis.'] };
+      return { meta, denials, problems: ['Claude returned text instead of the structured analysis.'] };
     }
   }
-  return { meta, analysis, problems: validate(analysis) };
+  return { meta, denials, analysis, problems: validate(analysis) };
 }
 
 function validate(analysis) {
@@ -100,7 +103,7 @@ function skipReason() {
   return 'Not run.';
 }
 
-function render({ analysis, meta, problems }) {
+function render({ analysis, meta, problems, denials = [] }) {
   const jdks = failures.legs.map((leg) => leg.jdk);
   const runUrl = process.env.GITHUB_RUN_ID
     ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
@@ -177,6 +180,13 @@ function render({ analysis, meta, problems }) {
     }
   }
 
+  if (denials.length > 0) {
+    lines.push('## Denied file reads', '',
+      `The permission settings (\`.github/claude/analysis-settings.json\`) blocked ${denials.length} file(s) Claude tried to read. `
+      + 'If these include files in the analysis workspace, Claude could not see its input and the analysis above is unreliable.', '',
+      ...denials.slice(0, 20).map((denied) => `- ${code(denied)}`), '');
+  }
+
   if (failures.notAnalyzed.length > 0) {
     lines.push('## Not analyzed', '', `${failures.notAnalyzed.length} more failed or flaky test(s) exceeded the analysis limit; see the table above.`, '');
   }
@@ -206,6 +216,7 @@ const missing = result.analysis?.findings
   ? expectedIds.filter((id) => !result.analysis.findings.some((finding) => finding.testId === id))
   : [];
 if (outcome !== 'skipped' && (!result.analysis || result.problems.length > 0 || missing.length > 0)) {
-  console.error(`::error::E2E failure analysis incomplete: ${[...result.problems, ...missing.map((id) => `${id}: no finding.`)].join(' ')}`);
+  const denied = result.denials?.length ? [`Claude was denied ${result.denials.length} file read(s); see "Denied file reads" in the report.`] : [];
+  console.error(`::error::E2E failure analysis incomplete: ${[...result.problems, ...missing.map((id) => `${id}: no finding.`), ...denied].join(' ')}`);
   process.exit(1);
 }
